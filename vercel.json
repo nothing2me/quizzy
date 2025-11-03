@@ -2,6 +2,14 @@
   "version": 2,
   "routes": [
     {
+      "src": "/favicon.ico",
+      "status": 204
+    },
+    {
+      "src": "/favicon.png",
+      "status": 204
+    },
+    {
       "src": "/(.*)",
       "dest": "api/index.py"
     }
