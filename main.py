@@ -56,7 +56,11 @@ else:
 async def lifespan(app: FastAPI):
     """Manage application lifespan events."""
     # Startup
-    init_db()
+    try:
+        init_db()
+    except Exception as e:
+        # Log error but don't fail startup
+        print(f"Warning: Database initialization error: {e}")
     yield
     # Shutdown (if needed)
     pass

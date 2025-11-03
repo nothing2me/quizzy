@@ -8,14 +8,23 @@ import os
 
 # Add parent directory to path so we can import main
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, parent_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 # Change to parent directory to ensure relative imports work
 os.chdir(parent_dir)
 
 # Import the FastAPI app
-from main import app
+try:
+    from main import app
+except Exception as e:
+    # If import fails, provide a helpful error
+    import traceback
+    print(f"Error importing main: {e}")
+    print(traceback.format_exc())
+    raise
 
 # Handler for Vercel - FastAPI is ASGI compatible
+# Vercel automatically wraps ASGI apps, so we can export the app directly
 handler = app
 
