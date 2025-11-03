@@ -99,14 +99,24 @@ def get_db_connection() -> sqlite3.Connection:
     the overhead of opening and closing connections repeatedly. The
     ``check_same_thread`` flag is set to False so the connection can
     safely be used by FastAPI's default thread pool executor.
+    
+    For Vercel/serverless, we create a new connection each time since
+    app.state might not persist across invocations.
     """
-    if not hasattr(app.state, "_db_conn"):
+    if os.environ.get("VERCEL"):
+        # On Vercel, create a new connection each time (serverless)
         conn = sqlite3.connect(DATABASE_PATH, check_same_thread=False)
         conn.row_factory = sqlite3.Row
-        # Enable foreign key enforcement
         conn.execute("PRAGMA foreign_keys = ON")
-        app.state._db_conn = conn
-    return app.state._db_conn
+        return conn
+    else:
+        # Local development: reuse connection
+        if not hasattr(app.state, "_db_conn"):
+            conn = sqlite3.connect(DATABASE_PATH, check_same_thread=False)
+            conn.row_factory = sqlite3.Row
+            conn.execute("PRAGMA foreign_keys = ON")
+            app.state._db_conn = conn
+        return app.state._db_conn
 
 
 def init_db() -> None:
