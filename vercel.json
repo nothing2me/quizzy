@@ -9,11 +9,6 @@
   "env": {
     "PYTHON_VERSION": "3.9",
     "VERCEL": "1"
-  },
-  "functions": {
-    "api/index.py": {
-      "maxDuration": 30
-    }
   }
 }
 
