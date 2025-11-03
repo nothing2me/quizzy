@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Study Error - {{ flashcard_set['name'] }} - Quizzy{% endblock %}
+
+{% block content %}
+    <h1>Study Error: {{ flashcard_set['name'] }}</h1>
+
+    <div class="flash-message" style="text-align: center; padding: 2rem; margin: 2rem 0;">
+        <h3>⚠️ {{ error }}</h3>
+    </div>
+
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="{{ request.url_for('view_set', set_id=flashcard_set['id']) }}">← Back to Set</a>
+    </div>
+{% endblock %}

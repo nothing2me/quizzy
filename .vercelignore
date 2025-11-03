@@ -1,0 +1,27 @@
+# Ignore files that shouldn't be deployed to Vercel
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.env
+.venv
+env/
+venv/
+ENV/
+flashcards.db
+flashcards.db.backup
+*.db
+*.sqlite
+*.sqlite3
+.git/
+.gitignore
+.vscode/
+.idea/
+*.log
+

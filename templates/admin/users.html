@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Quizzy{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-users"></i> User Management
+                </h1>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> All Users
+                        <span class="badge badge-primary ml-2">{{ users|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if users %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Status</th>
+                                        <th>Role</th>
+                                        <th>Joined</th>
+                                        <th>Last Login</th>
+                                        <th>Failed Logins</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                    <tr class="{% if not user.is_active %}table-secondary{% endif %}">
+                                        <td>{{ user.id }}</td>
+                                        <td>
+                                            {{ user.username }}
+                                            {% if user.id == user.id %}
+                                                <span class="badge badge-info ml-1">You</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ user.email or '-' }}</td>
+                                        <td>
+                                            {% if user.is_active %}
+                                                <span class="badge badge-success">Active</span>
+                                            {% else %}
+                                                <span class="badge badge-danger">Inactive</span>
+                                            {% endif %}
+                                            {% if user.account_locked_until %}
+                                                <span class="badge badge-warning ml-1">Locked</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if user.is_admin %}
+                                                <span class="badge badge-primary">Admin</span>
+                                            {% else %}
+                                                <span class="badge badge-secondary">User</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-muted small">{{ user.created_at }}</td>
+                                        <td class="text-muted small">{{ user.last_login or 'Never' }}</td>
+                                        <td>
+                                            {% if user.failed_login_attempts > 0 %}
+                                                <span class="badge badge-warning">{{ user.failed_login_attempts }}</span>
+                                            {% else %}
+                                                <span class="text-muted">0</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <!-- Toggle Admin -->
+                                                {% if user.id != user.id %}
+                                                    <form method="POST" action="{{ url_for('toggle_admin', user_id=user.id) }}" class="d-inline">
+                                                        <button type="submit" class="btn btn-outline-primary btn-sm" 
+                                                                title="{% if user.is_admin %}Remove Admin{% else %}Make Admin{% endif %}">
+                                                            <i class="fas fa-{% if user.is_admin %}user-minus{% else %}user-plus{% endif %}"></i>
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                                
+                                                <!-- Toggle Active -->
+                                                {% if user.id != user.id %}
+                                                    <form method="POST" action="{{ url_for('toggle_active', user_id=user.id) }}" class="d-inline">
+                                                        <button type="submit" class="btn btn-outline-{% if user.is_active %}danger{% else %}success{% endif %} btn-sm"
+                                                                title="{% if user.is_active %}Deactivate{% else %}Activate{% endif %}">
+                                                            <i class="fas fa-{% if user.is_active %}user-times{% else %}user-check{% endif %}"></i>
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                                
+                                                <!-- Unlock Account -->
+                                                {% if user.account_locked_until %}
+                                                    <form method="POST" action="{{ url_for('unlock_user', user_id=user.id) }}" class="d-inline">
+                                                        <button type="submit" class="btn btn-outline-warning btn-sm" title="Unlock Account">
+                                                            <i class="fas fa-unlock"></i>
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No users found.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Legend</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Status Badges:</h6>
+                            <span class="badge badge-success mr-2">Active</span>
+                            <span class="badge badge-danger mr-2">Inactive</span>
+                            <span class="badge badge-warning mr-2">Locked</span>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Role Badges:</h6>
+                            <span class="badge badge-primary mr-2">Admin</span>
+                            <span class="badge badge-secondary mr-2">User</span>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <h6>Actions:</h6>
+                            <button class="btn btn-outline-primary btn-sm mr-2" disabled><i class="fas fa-user-plus"></i></button> Make Admin
+                            <button class="btn btn-outline-danger btn-sm mr-2" disabled><i class="fas fa-user-times"></i></button> Deactivate
+                            <button class="btn btn-outline-warning btn-sm mr-2" disabled><i class="fas fa-unlock"></i></button> Unlock
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

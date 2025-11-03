@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white text-center">
+                <h2><i class="fas fa-graduation-cap"></i> Learn Mode</h2>
+                <p class="mb-0">{{ flashcard_set['name'] }}</p>
+                <p class="mb-0"><small>Prompting with {{ 'term' if direction == 'term_to_def' else 'definition' }}</small></p>
+            </div>
+            <div class="card-body">
+                {% if error %}
+                    <div class="alert alert-danger">
+                        {{ error }}
+                    </div>
+                {% else %}
+                    <!-- Single Question Display -->
+                    <div class="learn-question">
+                        <!-- Prompt Section -->
+                        <div class="definition-section mb-4">
+                            <h3 class="text-center text-primary mb-3">
+                                {% if direction == 'term_to_def' %}
+                                    <i class="fas fa-book"></i> Term
+                                {% else %}
+                                    <i class="fas fa-book"></i> Definition
+                                {% endif %}
+                            </h3>
+                            <div class="definition-content" style="white-space: pre-line;">
+                                <p class="mb-0">
+                                    {% if direction == 'term_to_def' %}
+                                        {% if current_card['front'] and ('\\frac' in current_card['front'] or '\\sum' in current_card['front'] or '\\sqrt' in current_card['front'] or '\\int' in current_card['front'] or '\\alpha' in current_card['front'] or '\\beta' in current_card['front'] or '\\gamma' in current_card['front'] or '\\delta' in current_card['front'] or '\\pi' in current_card['front'] or '\\sigma' in current_card['front'] or '\\mu' in current_card['front'] or '\\bar' in current_card['front'] or '\\text' in current_card['front']) %}
+                                            ${{ current_card['front'] | safe }}$
+                                        {% else %}
+                                            {{ current_card['front'] | safe }}
+                                        {% endif %}
+                                    {% else %}
+                                        {% if current_card['back'] and ('\\frac' in current_card['back'] or '\\sum' in current_card['back'] or '\\sqrt' in current_card['back'] or '\\int' in current_card['back'] or '\\alpha' in current_card['back'] or '\\beta' in current_card['back'] or '\\gamma' in current_card['back'] or '\\delta' in current_card['back'] or '\\pi' in current_card['back'] or '\\sigma' in current_card['back'] or '\\mu' in current_card['back'] or '\\bar' in current_card['back'] or '\\text' in current_card['back']) %}
+                                            ${{ current_card['back'] | safe }}$
+                                        {% else %}
+                                            {{ current_card['back'] | safe }}
+                                        {% endif %}
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Question Section -->
+                        <div class="question-section">
+                            <h4 class="text-center mb-4">Choose an answer</h4>
+                            
+                            <div class="row" id="answer-buttons">
+                                {% for i in range(4) %}
+                                <div class="col-md-6 mb-3">
+                                    <button type="button" class="btn btn-outline-primary btn-lg w-100 p-3 answer-btn" 
+                                            data-answer="{{ answer_options[i] }}" 
+                                            data-correct="{% if i == correct_position %}true{% else %}false{% endif %}">
+                                        <strong>{{ i + 1 }}</strong><br>
+                                        {% if answer_options[i] and ('\\frac' in answer_options[i] or '\\sum' in answer_options[i] or '\\sqrt' in answer_options[i] or '\\int' in answer_options[i] or '\\alpha' in answer_options[i] or '\\beta' in answer_options[i] or '\\gamma' in answer_options[i] or '\\delta' in answer_options[i] or '\\pi' in answer_options[i] or '\\sigma' in answer_options[i] or '\\mu' in answer_options[i] or '\\bar' in answer_options[i] or '\\text' in answer_options[i]) %}
+                                                ${{ answer_options[i] | safe }}$
+                                            {% else %}
+                                                {{ answer_options[i] | safe }}
+                                            {% endif %}
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Result Display (Hidden Initially) -->
+                            <div id="result-display" style="display: none;">
+                                <div class="alert alert-success text-center" id="result-alert">
+                                    <h4><i class="fas fa-check-circle"></i> <span id="result-text">Correct!</span></h4>
+                                </div>
+                                <div class="text-center mt-3">
+                                    <button type="button" class="btn btn-primary btn-lg" id="next-question-btn">
+                                        <i class="fas fa-forward"></i> Next Question
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress Indicator -->
+                        <div class="progress-section mt-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">Question {{ current_question }} of {{ total_questions }}</small>
+                                <div class="progress" style="width: 200px; height: 8px;">
+                                    <div class="progress-bar bg-primary" 
+                                         style="width: {{ (current_question / total_questions) * 100 }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Navigation -->
+                <div class="text-center mt-4">
+                    <a href="{{ request.url_for('view_set', set_id=flashcard_set['id']) }}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left"></i> Back to Set
+                    </a>
+                    <a href="{{ request.url_for('learn_mode', set_id=flashcard_set['id']) }}?direction={{ direction }}" class="btn btn-primary">
+                        <i class="fas fa-redo"></i> Shuffle Questions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.definition-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    color: #212529;
+    padding: 2rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    border: 2px solid #007bff;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.1);
+}
+
+.definition-section h3 {
+    color: #007bff !important;
+    margin-bottom: 1rem;
+}
+
+.definition-content {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 123, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.question-section {
+    margin-top: 2rem;
+}
+
+.question-section h4 {
+    color: #495057;
+    font-weight: 600;
+}
+
+.answer-btn {
+    transition: all 0.3s ease;
+    border: 2px solid #007bff;
+    font-size: 1.1rem;
+    min-height: 80px;
+    color: #495057;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.answer-btn:hover {
+    background-color: #007bff;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.answer-btn:active {
+    transform: translateY(0);
+}
+
+.question-section h4 {
+    color: #333;
+    font-weight: 600;
+}
+
+.progress-section {
+    border-top: 1px solid #eee;
+    padding-top: 1rem;
+}
+
+.card {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+.card-header {
+    border-bottom: none;
+}
+</style>
+
+<script>
+// Learn Mode JavaScript - Handles answer selection and question progression
+document.addEventListener('DOMContentLoaded', function() {
+    const answerButtons = document.querySelectorAll('.answer-btn');
+    const resultDisplay = document.getElementById('result-display');
+    const resultText = document.getElementById('result-text');
+    const resultAlert = document.getElementById('result-alert');
+    const nextQuestionBtn = document.getElementById('next-question-btn');
+    
+    // Current question data
+    const currentQuestion = {{ current_question }};
+    const totalQuestions = {{ total_questions }};
+    const setId = {{ flashcard_set['id'] }};
+    const direction = '{{ direction }}';
+    
+    // Add click handlers to answer buttons
+    answerButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const isCorrect = this.getAttribute('data-correct') === 'true';
+            const selectedAnswer = this.getAttribute('data-answer');
+            
+            // Disable all buttons
+            answerButtons.forEach(btn => btn.disabled = true);
+            
+            // Highlight the correct answer
+            answerButtons.forEach(btn => {
+                if (btn.getAttribute('data-correct') === 'true') {
+                    btn.classList.remove('btn-outline-primary');
+                    btn.classList.add('btn-success');
+                } else if (btn === this && !isCorrect) {
+                    btn.classList.remove('btn-outline-primary');
+                    btn.classList.add('btn-danger');
+                }
+            });
+            
+            // Show result
+            if (isCorrect) {
+                resultText.textContent = 'Correct!';
+                resultAlert.className = 'alert alert-success text-center';
+                resultAlert.innerHTML = '<h4><i class="fas fa-check-circle"></i> Correct!</h4>';
+            } else {
+                resultText.textContent = 'Incorrect';
+                resultAlert.className = 'alert alert-danger text-center';
+                resultAlert.innerHTML = '<h4><i class="fas fa-times-circle"></i> Incorrect</h4>';
+            }
+            
+            // Show result display
+            resultDisplay.style.display = 'block';
+            
+            // Update next question button
+            if (currentQuestion >= totalQuestions) {
+                nextQuestionBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete Quiz';
+                nextQuestionBtn.onclick = function() {
+                    window.location.href = '/set/' + setId;
+                };
+            } else {
+                nextQuestionBtn.innerHTML = '<i class="fas fa-forward"></i> Next Question';
+                nextQuestionBtn.onclick = function() {
+                    window.location.href = '/set/' + setId + '/learn?question=' + (currentQuestion + 1) + '&direction=' + encodeURIComponent(direction);
+                };
+            }
+        });
+        
+        // Add hover effects
+        button.addEventListener('mouseenter', function() {
+            if (!this.disabled) {
+                this.style.transform = 'translateY(-2px)';
+            }
+        });
+
+        button.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
+{% endblock %}

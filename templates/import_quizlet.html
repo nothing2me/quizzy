@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2><i class="fas fa-download"></i> Import from Quizlet</h2>
+                <p class="mb-0">Import flashcard sets directly from Quizlet URLs or exported text</p>
+            </div>
+            <div class="card-body">
+                {% if error %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Import Error:</strong> {{ error }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endif %}
+                
+                {% if show_text_fallback %}
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <i class="fas fa-info-circle"></i> <strong>URL Import Failed:</strong> Try the text import method below.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endif %}
+                
+                <form method="post" action="{{ request.url_for('import_quizlet_post') }}" id="importForm" enctype="multipart/form-data">
+                    <!-- Import Method Selection -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Choose Import Method:</label>
+                        <div class="btn-group w-100" role="group" aria-label="Import method">
+                            <input type="radio" class="btn-check" name="import_method" id="method_url" value="url" checked>
+                            <label class="btn btn-outline-primary" for="method_url">
+                                <i class="fas fa-link"></i> Import from URL
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="import_method" id="method_text" value="text">
+                            <label class="btn btn-outline-primary" for="method_text">
+                                <i class="fas fa-paste"></i> Import from Text
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="import_method" id="method_csv" value="csv">
+                            <label class="btn btn-outline-primary" for="method_csv">
+                                <i class="fas fa-file-csv"></i> Import from CSV
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Set Configuration -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <label for="set_name" class="form-label fw-bold">Set Name</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="set_name" 
+                                name="set_name" 
+                                value="{{ form_data.set_name if form_data else '' }}"
+                                placeholder="Enter a name for your flashcard set"
+                                required
+                            >
+                            <div class="form-text">Give your imported set a descriptive name</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Visibility</label>
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    id="is_public" 
+                                    name="is_public"
+                                    {% if form_data and form_data.is_public %}checked{% endif %}
+                                >
+                                <label class="form-check-label" for="is_public">
+                                    <i class="fas fa-globe"></i> Make Public
+                                </label>
+                            </div>
+                            <div class="form-text">Allow others to find and use this set</div>
+                        </div>
+                    </div>
+                    
+                    <!-- URL Import Section -->
+                    <div id="url-import-section" class="import-section">
+                        <div class="mb-3">
+                            <label for="quizlet_url" class="form-label fw-bold">Quizlet Set URL</label>
+                            <input 
+                                type="url" 
+                                class="form-control" 
+                                id="quizlet_url" 
+                                name="quizlet_url" 
+                                value="{{ form_data.quizlet_url if form_data else '' }}"
+                                placeholder="https://quizlet.com/1083850006/propability-statistics-exam-1-review-flash-cards/"
+                            >
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i> Paste the complete URL of the Quizlet set you want to import
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-lightbulb"></i> URL Import Tips:</h6>
+                            <ul class="mb-0">
+                                <li>Make sure the Quizlet set is public</li>
+                                <li>Copy the URL directly from your browser's address bar</li>
+                                <li>If URL import fails, try the text import method below</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Text Import Section -->
+                    <div id="text-import-section" class="import-section" style="display: none;">
+                        <div class="mb-3">
+                            <label for="import_text" class="form-label fw-bold">Exported Quizlet Text</label>
+                            <textarea 
+                                class="form-control" 
+                                id="import_text" 
+                                name="import_text" 
+                                rows="12"
+                                placeholder="Term1&#9;Definition1; Term2&#9;Definition2; Term3&#9;Definition3"
+                            >{{ form_data.import_text if form_data else '' }}</textarea>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i> Supports both formats: line-by-line or semicolon-separated
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle"></i> Text Import Instructions:</h6>
+                            <p><strong>Format 1 (Line-by-line):</strong></p>
+                            <ol class="mb-2">
+                                <li>Each card on a separate line</li>
+                                <li>Format: term&#9;definition</li>
+                                <li>Example: "Parameter&#9;numerical measurement describing a population"</li>
+                            </ol>
+                            <p><strong>Format 2 (Semicolon-separated):</strong></p>
+                            <ol class="mb-0">
+                                <li>All cards on one line</li>
+                                <li>Format: term&#9;definition; next term&#9;definition</li>
+                                <li>Example: "Apple&#9;A red fruit; Banana&#9;A yellow fruit"</li>
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <!-- CSV Import Section -->
+                    <div id="csv-import-section" class="import-section" style="display: none;">
+                        <div class="mb-3">
+                            <label for="csv_file" class="form-label fw-bold">CSV File</label>
+                            <input 
+                                type="file" 
+                                class="form-control" 
+                                id="csv_file" 
+                                name="csv_file" 
+                                accept=".csv,.txt"
+                            >
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i> Upload a CSV file with flashcards (term,definition format)
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-lightbulb"></i> CSV Import Tips:</h6>
+                            <ul class="mb-0">
+                                <li><strong>Format:</strong> First column = term, second column = definition</li>
+                                <li><strong>Delimiters:</strong> Supports comma (,), semicolon (;), or tab-separated</li>
+                                <li><strong>Headers:</strong> Automatically detects and skips header rows</li>
+                                <li><strong>Encoding:</strong> Files should be UTF-8 encoded</li>
+                                <li><strong>Example:</strong> "Apple,A red fruit" or "Banana;A yellow fruit"</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle"></i> CSV Format Requirements:</h6>
+                            <ul class="mb-0">
+                                <li>At least 2 columns (term and definition)</li>
+                                <li>One flashcard per row</li>
+                                <li>Terms and definitions should be meaningful (not empty or single characters)</li>
+                                <li>Quotes around values with commas are handled automatically</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                        <a href="{{ request.url_for('index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg" id="importBtn">
+                            <i class="fas fa-download"></i> Import Flashcards
+                        </button>
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <!-- Help Section -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
+                                <h5><i class="fas fa-question-circle"></i> Need Help?</h5>
+                            </div>
+                            <div class="card-body">
+                                <h6>URL Import Issues:</h6>
+                                <ul>
+                                    <li>Make sure the set is public</li>
+                                    <li>Try refreshing the Quizlet page</li>
+                                    <li>Use the text import method instead</li>
+                                </ul>
+                                
+                                <h6>Text Import Issues:</h6>
+                                <ul>
+                                    <li>Ensure each line has a term and definition</li>
+                                    <li>Separate them with a tab character</li>
+                                    <li>Remove any extra formatting</li>
+                                </ul>
+                                
+                                <h6>CSV Import Issues:</h6>
+                                <ul>
+                                    <li>Make sure file has at least 2 columns</li>
+                                    <li>Check file encoding (should be UTF-8)</li>
+                                    <li>Verify delimiter is comma, semicolon, or tab</li>
+                                    <li>Remove empty rows</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h5><i class="fas fa-check-circle"></i> Import Success</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>After successful import:</p>
+                                <ul>
+                                    <li>You'll be redirected to your new set</li>
+                                    <li>The set will appear in "Your Sets"</li>
+                                    <li>You can study or edit immediately</li>
+                                    <li>Share with others if made public</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Handle import method switching
+document.addEventListener('DOMContentLoaded', function() {
+    const urlMethod = document.getElementById('method_url');
+    const textMethod = document.getElementById('method_text');
+    const csvMethod = document.getElementById('method_csv');
+    const urlSection = document.getElementById('url-import-section');
+    const textSection = document.getElementById('text-import-section');
+    const csvSection = document.getElementById('csv-import-section');
+    const importBtn = document.getElementById('importBtn');
+    
+    function updateSections() {
+        // Hide all sections first
+        urlSection.style.display = 'none';
+        textSection.style.display = 'none';
+        csvSection.style.display = 'none';
+        
+        if (urlMethod.checked) {
+            urlSection.style.display = 'block';
+            importBtn.innerHTML = '<i class="fas fa-download"></i> Import from URL';
+        } else if (textMethod.checked) {
+            textSection.style.display = 'block';
+            importBtn.innerHTML = '<i class="fas fa-paste"></i> Import from Text';
+        } else if (csvMethod.checked) {
+            csvSection.style.display = 'block';
+            importBtn.innerHTML = '<i class="fas fa-file-csv"></i> Import from CSV';
+        }
+    }
+    
+    urlMethod.addEventListener('change', updateSections);
+    textMethod.addEventListener('change', updateSections);
+    csvMethod.addEventListener('change', updateSections);
+    
+    // Form validation
+    document.getElementById('importForm').addEventListener('submit', function(e) {
+        const method = document.querySelector('input[name="import_method"]:checked').value;
+        const setName = document.getElementById('set_name').value.trim();
+        
+        if (!setName) {
+            e.preventDefault();
+            alert('Please enter a name for your flashcard set.');
+            return;
+        }
+        
+        if (method === 'url') {
+            const url = document.getElementById('quizlet_url').value.trim();
+            if (!url) {
+                e.preventDefault();
+                alert('Please enter a Quizlet URL.');
+                return;
+            }
+        } else if (method === 'text') {
+            const text = document.getElementById('import_text').value.trim();
+            if (!text) {
+                e.preventDefault();
+                alert('Please paste the exported Quizlet text.');
+                return;
+            }
+        } else if (method === 'csv') {
+            const csvFile = document.getElementById('csv_file').files[0];
+            if (!csvFile) {
+                e.preventDefault();
+                alert('Please select a CSV file to upload.');
+                return;
+            }
+            
+            // Check file extension
+            const fileName = csvFile.name.toLowerCase();
+            if (!fileName.endsWith('.csv') && !fileName.endsWith('.txt')) {
+                e.preventDefault();
+                alert('Please select a CSV or TXT file.');
+                return;
+            }
+        }
+        
+        // Show loading state
+        importBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+        importBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %}

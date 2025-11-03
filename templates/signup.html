@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign Up - Quizzy{% endblock %}
+
+{% block content %}
+    <h1>Sign Up</h1>
+    {% if error %}
+        <div class="flash-message">{{ error }}</div>
+    {% endif %}
+    <form method="post" action="{{ request.url_for('signup_post') }}">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" required />
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required />
+        <button type="submit">Create Account</button>
+    </form>
+    <p>Already have an account? <a href="{{ request.url_for('login_get') }}">Log in</a>.</p>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header {% if is_correct %}bg-success{% else %}bg-danger{% endif %} text-white text-center">
+                <h2>
+                    {% if is_correct %}
+                        <i class="fas fa-check-circle"></i> Correct!
+                    {% else %}
+                        <i class="fas fa-times-circle"></i> Incorrect
+                    {% endif %}
+                </h2>
+                <p class="mb-0">Question {{ current_question }} of {{ total_questions }}</p>
+            </div>
+            <div class="card-body">
+                <!-- Question Review -->
+                <div class="question-review mb-4">
+                    <h4 class="text-primary mb-3">
+                        <i class="fas fa-question-circle"></i> Question Review
+                    </h4>
+                    
+                    <div class="definition-section mb-3">
+                        <h5 class="text-muted">Prompt:</h5>
+                        <div class="p-3 bg-light rounded">
+                            <p class="mb-0">
+                                {% if direction == 'term_to_def' %}
+                                    {% if card['front'] and ('\\frac' in card['front'] or '\\sum' in card['front'] or '\\sqrt' in card['front'] or '\\int' in card['front'] or '\\alpha' in card['front'] or '\\beta' in card['front'] or '\\gamma' in card['front'] or '\\delta' in card['front'] or '\\pi' in card['front'] or '\\sigma' in card['front'] or '\\mu' in card['front'] or '\\bar' in card['front'] or '\\text' in card['front']) %}
+                                        ${{ card['front'] | safe }}$
+                                    {% else %}
+                                        {{ card['front'] | safe }}
+                                    {% endif %}
+                                {% else %}
+                                    {% if card['back'] and ('\\frac' in card['back'] or '\\sum' in card['back'] or '\\sqrt' in card['back'] or '\\int' in card['back'] or '\\alpha' in card['back'] or '\\beta' in card['back'] or '\\gamma' in card['back'] or '\\delta' in card['back'] or '\\pi' in card['back'] or '\\sigma' in card['back'] or '\\mu' in card['back'] or '\\bar' in card['back'] or '\\text' in card['back']) %}
+                                        ${{ card['back'] | safe }}$
+                                    {% else %}
+                                        {{ card['back'] | safe }}
+                                    {% endif %}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="answer-section">
+                        <h5 class="text-muted">Correct Answer:</h5>
+                        <div class="p-3 bg-success text-white rounded mb-3">
+                            <strong>
+                                {% if correct_answer and ('\\frac' in correct_answer or '\\sum' in correct_answer or '\\sqrt' in correct_answer or '\\int' in correct_answer or '\\alpha' in correct_answer or '\\beta' in correct_answer or '\\gamma' in correct_answer or '\\delta' in correct_answer or '\\pi' in correct_answer or '\\sigma' in correct_answer or '\\mu' in correct_answer or '\\bar' in correct_answer or '\\text' in correct_answer) %}
+                                    ${{ correct_answer | safe }}$
+                                {% else %}
+                                    {{ correct_answer | safe }}
+                                {% endif %}
+                            </strong>
+                        </div>
+                        
+                        {% if not is_correct %}
+                            <h5 class="text-muted">Your Answer:</h5>
+                            <div class="p-3 bg-danger text-white rounded mb-3">
+                                <strong>{{ selected_answer }}</strong>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Explanation -->
+                <div class="explanation-section mb-4">
+                    <div class="alert {% if is_correct %}alert-success{% else %}alert-danger{% endif %}">
+                        {% if is_correct %}
+                            <i class="fas fa-thumbs-up"></i> <strong>Great job!</strong> You correctly identified the term.
+                        {% else %}
+                            <i class="fas fa-thumbs-down"></i> <strong>Not quite right.</strong> The correct answer was "{{ correct_answer }}".
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="text-center">
+                    {% if is_last_question %}
+                        <a href="{{ request.url_for('view_set', set_id=set_id) }}" class="btn btn-success btn-lg me-2">
+                            <i class="fas fa-check-circle"></i> Complete Quiz
+                        </a>
+                    {% else %}
+                        <a href="{{ request.url_for('learn_mode', set_id=set_id, question=next_question) }}?direction={{ direction }}" class="btn btn-primary btn-lg me-2">
+                            <i class="fas fa-forward"></i> Next Question
+                        </a>
+                    {% endif %}
+                    <a href="{{ request.url_for('view_set', set_id=set_id) }}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-arrow-left"></i> Back to Set
+                    </a>
+                </div>
+                
+                <!-- Progress Info -->
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Progress</small>
+                        <div class="progress" style="width: 200px; height: 8px;">
+                            <div class="progress-bar bg-primary" 
+                                 style="width: {{ (current_question / total_questions) * 100 }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.definition-section {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+}
+
+.definition-section h5 {
+    color: white !important;
+    margin-bottom: 0.5rem;
+}
+
+.definition-section .p-3 {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.card {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+.card-header {
+    border-bottom: none;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+}
+</style>
+{% endblock %}

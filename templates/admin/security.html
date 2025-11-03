@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Security Logs - Quizzy{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-shield-alt"></i> Security Monitoring
+                </h1>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Statistics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar"></i> Event Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if event_stats %}
+                        <div class="row">
+                            {% for stat in event_stats %}
+                            <div class="col-md-3 mb-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title text-{% if stat.event_type == 'login_success' %}success{% elif stat.event_type == 'login_failed' %}danger{% elif stat.event_type == 'signup' %}info{% else %}primary{% endif %}">
+                                            {{ stat.count }}
+                                        </h5>
+                                        <p class="card-text small text-muted">{{ stat.event_type.replace('_', ' ').title() }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No security events recorded.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Events -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> Security Events
+                        <span class="badge badge-primary ml-2">Page {{ pagination.page }} of {{ pagination.total_pages }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if security_events %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Event Type</th>
+                                        <th>User</th>
+                                        <th>IP Address</th>
+                                        <th>User Agent</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for event in security_events %}
+                                    <tr>
+                                        <td class="text-muted small">{{ event.created_at }}</td>
+                                        <td>
+                                            <span class="badge badge-{% if event.event_type == 'login_success' %}success{% elif event.event_type == 'login_failed' %}danger{% elif event.event_type == 'signup' %}info{% elif event.event_type == 'card_created' %}primary{% else %}secondary{% endif %}">
+                                                {{ event.event_type.replace('_', ' ').title() }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if event.username %}
+                                                <span class="text-primary">{{ event.username }}</span>
+                                            {% else %}
+                                                <span class="text-muted">Anonymous</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-muted small font-monospace">{{ event.ip_address }}</td>
+                                        <td class="text-muted small" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                            {{ event.user_agent or '-' }}
+                                        </td>
+                                        <td class="text-muted small">
+                                            {% if event.details %}
+                                                <span title="{{ event.details }}">{{ event.details[:50] }}{% if event.details|length > 50 %}...{% endif %}</span>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if pagination.total_pages > 1 %}
+                        <nav aria-label="Security events pagination">
+                            <ul class="pagination justify-content-center">
+                                {% if pagination.has_prev %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin_security', page=pagination.prev_page) }}">
+                                            <i class="fas fa-chevron-left"></i> Previous
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">
+                                            <i class="fas fa-chevron-left"></i> Previous
+                                        </span>
+                                    </li>
+                                {% endif %}
+
+                                <!-- Page numbers -->
+                                {% for page_num in range(1, pagination.total_pages + 1) %}
+                                    {% if page_num == pagination.page %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% elif page_num <= 3 or page_num > pagination.total_pages - 3 or (page_num >= pagination.page - 1 and page_num <= pagination.page + 1) %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin_security', page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% elif page_num == 4 or page_num == pagination.total_pages - 3 %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if pagination.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin_security', page=pagination.next_page) }}">
+                                            Next <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">
+                                            Next <i class="fas fa-chevron-right"></i>
+                                        </span>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-shield-alt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No security events found.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Type Legend -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Event Type Legend</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <span class="badge badge-success mr-2">Login Success</span>
+                            <span class="badge badge-danger mr-2">Login Failed</span>
+                            <span class="badge badge-info mr-2">Signup</span>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="badge badge-primary mr-2">Card Created</span>
+                            <span class="badge badge-warning mr-2">Admin Toggle</span>
+                            <span class="badge badge-secondary mr-2">Other Events</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

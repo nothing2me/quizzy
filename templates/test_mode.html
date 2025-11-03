@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Test Mode - {{ flashcard_set['name'] }} - Quizzy{% endblock %}
+
+{% block content %}
+    <h1>Test Mode: {{ flashcard_set['name'] }}</h1>
+    <p style="text-align: center; color: #666;">
+        Multiple choice quiz • {{ questions|length }} questions
+    </p>
+
+    <form method="post" action="{{ request.url_for('submit_test', set_id=flashcard_set['id']) }}" id="test-form">
+        <input type="hidden" name="num_questions" value="{{ questions|length }}">
+        {% for question in questions %}
+        {% set question_index = loop.index0 %}
+        <div class="question-container">
+            <div class="question-text">
+                Question {{ loop.index }}: {{ question.question }}
+            </div>
+            <div class="answer-options">
+                {% for answer in question.answers %}
+                <label class="answer-option">
+                    <input type="radio" name="question_{{ question_index }}" value="{{ loop.index0 }}">
+                    {{ answer }}
+                </label>
+                {% endfor %}
+            </div>
+            <div style="margin-top: 0.5rem;">
+                <button type="button" onclick="clearSelection({{ question_index }})">Clear selection</button>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div style="text-align: center; margin: 2rem 0;">
+            <button type="submit" class="study-button" style="font-size: 1.2rem; padding: 1rem 2rem;">
+                Submit Test
+            </button>
+        </div>
+    </form>
+
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="{{ request.url_for('study_mode_select', set_id=flashcard_set['id']) }}">← Back to Study Options</a>
+    </div>
+
+    <script>
+        // Allow deselecting a selected radio by clicking it again
+        document.querySelectorAll('#test-form input[type="radio"]').forEach(function(radio) {
+            radio.addEventListener('mousedown', function(e) {
+                this.dataset.wasChecked = this.checked ? 'true' : 'false';
+            });
+            radio.addEventListener('click', function(e) {
+                if (this.dataset.wasChecked === 'true') {
+                    this.checked = false;
+                    // Clear wasChecked so subsequent clicks work normally
+                    this.dataset.wasChecked = 'false';
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Clear all options for a question index (grouped by name)
+        function clearSelection(questionIdx) {
+            const groupName = `question_${questionIdx}`;
+            document.querySelectorAll(`input[name="${groupName}"]`).forEach(function(r) {
+                r.checked = false;
+            });
+        }
+    </script>
+{% endblock %}

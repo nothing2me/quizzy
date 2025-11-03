@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ flashcard_set['name'] }} - Quizzy{% endblock %}
+
+{% block content %}
+    <h1>{{ flashcard_set['name'] }}</h1>
+    {% if flashcard_set['public'] %}
+        <p><em>This set is public.</em></p>
+    {% else %}
+        <p><em>This set is private.</em></p>
+    {% endif %}
+
+    {% if cards %}
+        <div style="margin: 1rem 0;">
+            <a href="{{ request.url_for('study_mode_select', set_id=flashcard_set['id']) }}" class="study-button">Study This Set</a>
+        </div>
+    {% endif %}
+
+    {% if can_edit %}
+        <h2>Add Card</h2>
+        {% if error %}
+            <div class="flash-message">{{ error }}</div>
+        {% endif %}
+        <form id="add-card-form">
+            <label for="front">Front</label>
+            <textarea id="front" name="front" rows="2" required></textarea>
+            <label for="back">Back</label>
+            <textarea id="back" name="back" rows="2" required></textarea>
+            <button type="submit">Add Card</button>
+        </form>
+        
+        <div id="save-changes-section" style="display: none; margin-top: 1rem; padding: 1rem; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
+            <p style="margin: 0 0 1rem 0; color: #6c757d;">You have unsaved changes. Click "Save Changes" to save them to the database.</p>
+            <button id="save-changes-btn" class="study-button">Save Changes</button>
+            <button id="discard-changes-btn" style="margin-left: 0.5rem; background-color: #6c757d; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Discard Changes</button>
+        </div>
+    {% endif %}
+
+    <h2>Cards</h2>
+    <div id="cards-container">
+        {% if cards %}
+            <table>
+                <thead>
+                    <tr><th>Front</th><th>Back</th>{% if can_edit %}<th>Actions</th>{% endif %}</tr>
+                </thead>
+                <tbody id="cards-tbody">
+                {% for card in cards %}
+                    <tr data-card-id="{{ card['id'] }}">
+                        <td style="white-space: pre-line;">
+                            {% if card['front'] and ('\\frac' in card['front'] or '\\sum' in card['front'] or '\\sqrt' in card['front'] or '\\int' in card['front'] or '\\alpha' in card['front'] or '\\beta' in card['front'] or '\\gamma' in card['front'] or '\\delta' in card['front'] or '\\pi' in card['front'] or '\\sigma' in card['front'] or '\\mu' in card['front'] or '\\bar' in card['front'] or '\\text' in card['front']) %}
+                                ${{ card['front'] | safe }}$
+                            {% else %}
+                                {{ card['front'] | safe }}
+                            {% endif %}
+                        </td>
+                        <td style="white-space: pre-line;">
+                            {% if card['back'] and ('\\frac' in card['back'] or '\\sum' in card['back'] or '\\sqrt' in card['back'] or '\\int' in card['back'] or '\\alpha' in card['back'] or '\\beta' in card['back'] or '\\gamma' in card['back'] or '\\delta' in card['back'] or '\\pi' in card['back'] or '\\sigma' in card['back'] or '\\mu' in card['back'] or '\\bar' in card['back'] or '\\text' in card['back']) %}
+                                ${{ card['back'] | safe }}$
+                            {% else %}
+                                {{ card['back'] | safe }}
+                            {% endif %}
+                        </td>
+                        {% if can_edit %}
+                            <td>
+                                <a href="{{ request.url_for('edit_card', set_id=flashcard_set['id'], card_id=card['id']) }}" class="btn btn-sm btn-outline-primary me-2">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="{{ request.url_for('delete_card_route', set_id=flashcard_set['id'], card_id=card['id']) }}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p id="no-cards-message">No cards yet.</p>
+        {% endif %}
+    </div>
+
+    {% if can_edit %}
+        <h2>Collaborators</h2>
+        <ul>
+            {% for collab in collaborators %}
+                <li>{{ collab[1] }} <a href="{{ request.url_for('remove_collaborator_route', set_id=flashcard_set['id'], user_id=collab[0]) }}" onclick="return confirm('Remove collaborator?');">Remove</a></li>
+            {% endfor %}
+            {% if not collaborators %}<li>No collaborators.</li>{% endif %}
+        </ul>
+        <h3>Add Collaborator</h3>
+        <form method="post" action="{{ request.url_for('add_collaborator_route', set_id=flashcard_set['id']) }}">
+            <label for="username">Username</label>
+            <input id="username" name="username" type="text" required />
+            <button type="submit">Add</button>
+        </form>
+        <p><a href="{{ request.url_for('delete_set_route', set_id=flashcard_set['id']) }}" onclick="return confirm('Are you sure you want to delete this set?');">Delete Set</a></p>
+    {% endif %}
+
+    {% if can_edit %}
+    <script>
+        let pendingCards = [];
+        let cardCounter = 0;
+
+        document.getElementById('add-card-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const front = document.getElementById('front').value.trim();
+            const back = document.getElementById('back').value.trim();
+            
+            if (!front || !back) {
+                alert('Please fill in both front and back fields.');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('front', front);
+                formData.append('back', back);
+
+                const response = await fetch(`{{ request.url_for('add_card_ajax', set_id=flashcard_set['id']) }}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Add card to pending list
+                    const pendingCard = {
+                        id: 'pending_' + (++cardCounter),
+                        front: front,
+                        back: back,
+                        isPending: true
+                    };
+                    pendingCards.push(pendingCard);
+                    
+                    // Add to visual display
+                    addCardToDisplay(pendingCard);
+                    
+                    // Clear form
+                    document.getElementById('front').value = '';
+                    document.getElementById('back').value = '';
+                    
+                    // Show save changes section
+                    document.getElementById('save-changes-section').style.display = 'block';
+                    
+                    // Update study button visibility
+                    updateStudyButtonVisibility();
+                } else {
+                    alert('Error adding card: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while adding the card.');
+            }
+        });
+
+        document.getElementById('save-changes-btn').addEventListener('click', function() {
+            // Cards are already saved to database via AJAX, just hide the save section
+            document.getElementById('save-changes-section').style.display = 'none';
+            pendingCards = [];
+        });
+
+        document.getElementById('discard-changes-btn').addEventListener('click', function() {
+            if (confirm('Are you sure you want to discard all pending changes? This will remove the cards you just added.')) {
+                // Remove pending cards from display
+                pendingCards.forEach(card => {
+                    const row = document.querySelector(`tr[data-card-id="${card.id}"]`);
+                    if (row) {
+                        row.remove();
+                    }
+                });
+                
+                // Hide save section and clear pending cards
+                document.getElementById('save-changes-section').style.display = 'none';
+                pendingCards = [];
+                
+                // Update study button visibility
+                updateStudyButtonVisibility();
+            }
+        });
+
+        function addCardToDisplay(card) {
+            const tbody = document.getElementById('cards-tbody');
+            const noCardsMessage = document.getElementById('no-cards-message');
+            
+            // Hide "No cards yet" message if it exists
+            if (noCardsMessage) {
+                noCardsMessage.style.display = 'none';
+            }
+            
+            // Create table if it doesn't exist
+            if (!tbody) {
+                const table = document.createElement('table');
+                table.innerHTML = `
+                    <thead>
+                        <tr><th>Front</th><th>Back</th>{% if can_edit %}<th>Actions</th>{% endif %}</tr>
+                    </thead>
+                    <tbody id="cards-tbody"></tbody>
+                `;
+                document.getElementById('cards-container').appendChild(table);
+            }
+            
+            const row = document.createElement('tr');
+            row.setAttribute('data-card-id', card.id);
+            row.style.backgroundColor = card.isPending ? '#fff3cd' : '';
+            
+            const frontCell = document.createElement('td');
+            frontCell.innerHTML = escapeHtml(card.front);
+            
+            const backCell = document.createElement('td');
+            backCell.innerHTML = escapeHtml(card.back);
+            
+            row.appendChild(frontCell);
+            row.appendChild(backCell);
+            
+            {% if can_edit %}
+            const actionsCell = document.createElement('td');
+            actionsCell.innerHTML = `
+                <span style="color: #6c757d; font-style: italic;">Pending save...</span>
+            `;
+            row.appendChild(actionsCell);
+            {% endif %}
+            
+            document.getElementById('cards-tbody').appendChild(row);
+        }
+
+        function updateStudyButtonVisibility() {
+            const studyButton = document.querySelector('a[href*="study_mode_select"]');
+            const totalCards = document.querySelectorAll('#cards-tbody tr').length;
+            
+            if (studyButton) {
+                if (totalCards > 0) {
+                    studyButton.style.display = 'inline-block';
+                } else {
+                    studyButton.style.display = 'none';
+                }
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+    {% endif %}
+{% endblock %}

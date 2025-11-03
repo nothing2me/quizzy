@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Card - {{ flashcard_set['name'] }} - Quizzy{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2><i class="fas fa-edit"></i> Edit Card</h2>
+                <p class="mb-0">Set: {{ flashcard_set['name'] }}</p>
+            </div>
+            <div class="card-body">
+                {% if error %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Error:</strong> {{ error }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endif %}
+                
+                <form method="post" action="{{ request.url_for('edit_card_post', set_id=flashcard_set['id'], card_id=card['id']) }}">
+                    <div class="mb-3">
+                        <label for="front" class="form-label fw-bold">Term</label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="front" 
+                            name="front" 
+                            value="{{ card['front'] }}"
+                            placeholder="Enter the term or question"
+                            required
+                        >
+                        <div class="form-text">The front side of the flashcard (term, question, etc.)</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="back" class="form-label fw-bold">Definition</label>
+                        <textarea 
+                            class="form-control" 
+                            id="back" 
+                            name="back" 
+                            rows="8"
+                            placeholder="Enter the definition or answer"
+                            required
+                        >{{ card['back'] }}</textarea>
+                        <div class="form-text">The back side of the flashcard (definition, answer, explanation, etc.)</div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                        <a href="{{ request.url_for('view_set', set_id=flashcard_set['id']) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save"></i> Update Card
+                        </button>
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <!-- Help Section -->
+                <div class="alert alert-info">
+                    <h5><i class="fas fa-info-circle"></i> Editing Tips:</h5>
+                    <ul class="mb-0">
+                        <li><strong>Term:</strong> Keep it concise and clear</li>
+                        <li><strong>Definition:</strong> Provide complete explanations, formulas, or answers</li>
+                        <li><strong>Multi-line content:</strong> Use line breaks for better formatting</li>
+                        <li><strong>Mathematical formulas:</strong> Use proper notation and symbols</li>
+                    </ul>
+                </div>
+                
+                <!-- Preview Section -->
+                <div class="card border-secondary">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="fas fa-eye"></i> Preview</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary">Front:</h6>
+                                <div class="border p-3 rounded bg-light" id="front-preview">
+                                    {% if card['front'] and ('\\frac' in card['front'] or '\\sum' in card['front'] or '\\sqrt' in card['front'] or '\\int' in card['front'] or '\\alpha' in card['front'] or '\\beta' in card['front'] or '\\gamma' in card['front'] or '\\delta' in card['front'] or '\\pi' in card['front'] or '\\sigma' in card['front'] or '\\mu' in card['front'] or '\\bar' in card['front'] or '\\text' in card['front']) %}
+                                        ${{ card['front'] | safe }}$
+                                    {% else %}
+                                        {{ card['front'] | safe }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-primary">Back:</h6>
+                                <div class="border p-3 rounded bg-light" id="back-preview" style="white-space: pre-line;">
+                                    {% if card['back'] and ('\\frac' in card['back'] or '\\sum' in card['back'] or '\\sqrt' in card['back'] or '\\int' in card['back'] or '\\alpha' in card['back'] or '\\beta' in card['back'] or '\\gamma' in card['back'] or '\\delta' in card['back'] or '\\pi' in card['back'] or '\\sigma' in card['back'] or '\\mu' in card['back'] or '\\bar' in card['back'] or '\\text' in card['back']) %}
+                                        ${{ card['back'] | safe }}$
+                                    {% else %}
+                                        {{ card['back'] | safe }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- LaTeX Help Section -->
+                <div class="card border-info mt-3">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0"><i class="fas fa-square-root-alt"></i> LaTeX Math Support</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">You can use LaTeX syntax for mathematical formulas:</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Inline Math:</h6>
+                                <ul class="small mb-0">
+                                    <li><code>$x^2 + y^2 = z^2$</code> → $x^2 + y^2 = z^2$</li>
+                                    <li><code>$\frac{a}{b}$</code> → $\frac{a}{b}$</li>
+                                    <li><code>$\sqrt{x}$</code> → $\sqrt{x}$</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Display Math:</h6>
+                                <ul class="small mb-0">
+                                    <li><code>$$\int_0^\infty e^{-x} dx$$</code></li>
+                                    <li><code>$$\sum_{i=1}^n i = \frac{n(n+1)}{2}$$</code></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i> 
+                                Use <code>$...$</code> for inline math and <code>$$...$$</code> for display math.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live preview functionality with LaTeX support
+document.addEventListener('DOMContentLoaded', function() {
+    const frontInput = document.getElementById('front');
+    const backInput = document.getElementById('back');
+    const frontPreview = document.getElementById('front-preview');
+    const backPreview = document.getElementById('back-preview');
+    
+    function updatePreview() {
+        let frontContent = frontInput.value || 'Enter term...';
+        let backContent = backInput.value || 'Enter definition...';
+        
+        // Check if content looks like LaTeX and wrap in delimiters
+        const latexPatterns = ['\\frac', '\\sum', '\\sqrt', '\\int', '\\alpha', '\\beta', '\\gamma', '\\delta', '\\pi', '\\sigma', '\\mu', '\\bar', '\\text'];
+        
+        if (latexPatterns.some(pattern => frontContent.includes(pattern))) {
+            frontContent = `$${frontContent}$`;
+        }
+        if (latexPatterns.some(pattern => backContent.includes(pattern))) {
+            backContent = `$${backContent}$`;
+        }
+        
+        frontPreview.innerHTML = frontContent;
+        backPreview.innerHTML = backContent;
+        
+        // Re-render KaTeX after updating content
+        if (window.renderMathInElement) {
+            renderMathInElement(frontPreview, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\(', right: '\\)', display: false},
+                    {left: '\\[', right: '\\]', display: true}
+                ],
+                throwOnError: false
+            });
+            renderMathInElement(backPreview, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\(', right: '\\)', display: false},
+                    {left: '\\[', right: '\\]', display: true}
+                ],
+                throwOnError: false
+            });
+        }
+    }
+    
+    frontInput.addEventListener('input', updatePreview);
+    backInput.addEventListener('input', updatePreview);
+    
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const front = frontInput.value.trim();
+        const back = backInput.value.trim();
+        
+        if (!front || !back) {
+            e.preventDefault();
+            alert('Both term and definition are required.');
+            return;
+        }
+        
+        if (front.length < 1) {
+            e.preventDefault();
+            alert('Term must be at least 1 character long.');
+            return;
+        }
+        
+        if (back.length < 5) {
+            e.preventDefault();
+            alert('Definition must be at least 5 characters long.');
+            return;
+        }
+    });
+    
+    // Initial preview update
+    updatePreview();
+});
+</script>
+{% endblock %}

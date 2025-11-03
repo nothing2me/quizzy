@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Study {{ flashcard_set['name'] }} - Quizzy{% endblock %}
+
+{% block content %}
+    <h1>Study: {{ flashcard_set['name'] }}</h1>
+    <p>This set contains {{ card_count }} cards.</p>
+
+    <div class="study-mode-card">
+        <h3>📚 Flashcard Mode</h3>
+        <p>Flip through cards one by one. Perfect for memorization and review.</p>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="{{ request.url_for('flashcard_mode', set_id=flashcard_set['id'], mode='order') }}" class="study-button">Study in Order</a>
+            <a href="{{ request.url_for('flashcard_mode', set_id=flashcard_set['id'], mode='random') }}" class="study-button">Study Random</a>
+        </div>
+    </div>
+
+    <div class="study-mode-card">
+        <h3>📝 Test Mode</h3>
+        <p>Take a multiple choice quiz to test your knowledge.</p>
+        <form method="get" action="{{ request.url_for('test_mode', set_id=flashcard_set['id']) }}" style="margin-top: 1rem;">
+            <div style="display: flex; gap: 0.5rem; align-items: center; justify-content: center; flex-wrap: wrap;">
+                <label for="num_questions" style="font-weight: 500;">Number of questions:</label>
+                <input 
+                    type="number" 
+                    id="num_questions" 
+                    name="num_questions" 
+                    value="10" 
+                    min="1" 
+                    max="{{ card_count }}" 
+                    style="width: 80px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; text-align: center;"
+                    required
+                >
+                <button type="submit" class="study-button" style="margin: 0;">Start Test</button>
+            </div>
+            <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem; text-align: center;">
+                Choose between 1 and {{ card_count }} questions
+            </p>
+        </form>
+    </div>
+
+    <div class="study-mode-card">
+        <h3>🎓 Learn Mode</h3>
+        <p>Study with multiple choice questions. Choose prompt direction.</p>
+        <form method="get" action="{{ request.url_for('learn_mode', set_id=flashcard_set['id']) }}" style="margin-top: 1rem;">
+            <div style="display: flex; gap: 0.5rem; align-items: center; justify-content: center; flex-wrap: wrap;">
+                <label for="direction" style="font-weight: 500;">Prompt with:</label>
+                <select id="direction" name="direction" style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="def_to_term">Definition → choose Term</option>
+                    <option value="term_to_def">Term → choose Definition</option>
+                </select>
+                <button type="submit" class="study-button" style="margin: 0;">Start Learning</button>
+            </div>
+        </form>
+    </div>
+
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="{{ request.url_for('view_set', set_id=flashcard_set['id']) }}">← Back to Set</a>
+    </div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Test Results - {{ flashcard_set['name'] }} - Quizzy{% endblock %}
+
+{% block content %}
+    <h1>Test Results: {{ flashcard_set['name'] }}</h1>
+
+    <div class="test-results">
+        <div class="score-display">
+            <div>Your Score</div>
+            <div class="score-percentage">{{ score }}/{{ total }} ({{ "%.1f"|format(percentage) }}%)</div>
+        </div>
+
+        <h3>Question Results:</h3>
+        {% for result in results %}
+        <div class="result-item {% if result.is_correct %}result-correct{% else %}result-incorrect{% endif %}">
+            <div style="font-weight: bold; margin-bottom: 0.5rem;">
+                Question {{ loop.index }}: {{ result.question }}
+            </div>
+            <div style="margin-bottom: 0.5rem;">
+                <strong>Your answer:</strong> {{ result.user_answer }}
+            </div>
+            <div>
+                <strong>Correct answer:</strong> {{ result.correct_answer }}
+            </div>
+            <div style="margin-top: 0.5rem; font-weight: bold; color: {% if result.is_correct %}#28a745{% else %}#dc3545{% endif %};">
+                {% if result.is_correct %}✓ Correct{% else %}✗ Incorrect{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="{{ request.url_for('test_mode', set_id=flashcard_set['id']) }}" class="study-button">Take Test Again</a>
+        <a href="{{ request.url_for('study_mode_select', set_id=flashcard_set['id']) }}" style="margin-left: 1rem;">← Back to Study Options</a>
+    </div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Quizzy{% endblock %}
+
+{% block content %}
+    <h1>Welcome{% if user %}, {{ user['username'] }}{% endif %}</h1>
+    <form method="get" action="{{ request.url_for('index') }}">
+        <input type="text" name="q" placeholder="Search sets..." value="{{ query }}" />
+        <button type="submit">Search</button>
+    </form>
+
+    {% if user %}
+        <h2>Your Sets</h2>
+        {% if my_sets %}
+            <ul>
+            {% for s in my_sets %}
+                    <li><a href="{{ request.url_for('view_set', set_id=s['id']) }}">{{ s['name'] }}</a>{% if not s['public'] %} (private){% endif %}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>You have no sets yet. <a href="{{ request.url_for('create_set_get') }}">Create one</a>.</p>
+        {% endif %}
+
+        <h2>Collaborations</h2>
+        {% if collab_sets %}
+            <ul>
+            {% for s in collab_sets %}
+                    <li><a href="{{ request.url_for('view_set', set_id=s['id']) }}">{{ s['name'] }}</a>{% if not s['public'] %} (private){% endif %}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>You're not collaborating on any sets.</p>
+        {% endif %}
+    {% endif %}
+
+    <h2>Public Sets</h2>
+    {% if public_sets %}
+        <ul>
+            {% for s in public_sets %}
+                <li><a href="{{ request.url_for('view_set', set_id=s['id']) }}">{{ s['name'] }}</a></li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No public sets found.</p>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}New Set - Quizzy{% endblock %}
+
+{% block content %}
+    <h1>Create New Set</h1>
+    {% if error %}
+        <div class="flash-message">{{ error }}</div>
+    {% endif %}
+    <form method="post" action="{{ request.url_for('create_set_post') }}">
+        <label for="name">Set Name</label>
+        <input id="name" name="name" type="text" required />
+        <label for="public">Make Public?</label>
+        <input id="public" name="public" type="checkbox" />
+        <button type="submit">Create Set</button>
+    </form>
+{% endblock %}

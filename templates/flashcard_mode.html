@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Flashcard Mode - {{ flashcard_set['name'] }} - Quizzy{% endblock %}
+
+{% block content %}
+    <h1>Flashcard Mode: {{ flashcard_set['name'] }}</h1>
+    <p style="text-align: center; color: #666;">
+        {% if mode == 'random' %}
+            Studying in random order
+        {% else %}
+            Studying in order
+        {% endif %}
+        • Card <span id="current-card">1</span> of {{ cards|length }}
+    </p>
+
+    <div class="flashcard-container">
+        <div class="flashcard" id="flashcard">
+            <div class="flashcard-front" id="flashcard-front" style="white-space: pre-line;">
+                <div id="front-content">
+                    {% if cards[0]['front'] and ('\\frac' in cards[0]['front'] or '\\sum' in cards[0]['front'] or '\\sqrt' in cards[0]['front'] or '\\int' in cards[0]['front'] or '\\alpha' in cards[0]['front'] or '\\beta' in cards[0]['front'] or '\\gamma' in cards[0]['front'] or '\\delta' in cards[0]['front'] or '\\pi' in cards[0]['front'] or '\\sigma' in cards[0]['front'] or '\\mu' in cards[0]['front'] or '\\bar' in cards[0]['front'] or '\\text' in cards[0]['front']) %}
+                        ${{ cards[0]['front'] | safe }}$
+                    {% else %}
+                        {{ cards[0]['front'] | safe }}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="flashcard-back" id="flashcard-back" style="white-space: pre-line;">
+                <div id="back-content">
+                    {% if cards[0]['back'] and ('\\frac' in cards[0]['back'] or '\\sum' in cards[0]['back'] or '\\sqrt' in cards[0]['back'] or '\\int' in cards[0]['back'] or '\\alpha' in cards[0]['back'] or '\\beta' in cards[0]['back'] or '\\gamma' in cards[0]['back'] or '\\delta' in cards[0]['back'] or '\\pi' in cards[0]['back'] or '\\sigma' in cards[0]['back'] or '\\mu' in cards[0]['back'] or '\\bar' in cards[0]['back'] or '\\text' in cards[0]['back']) %}
+                        ${{ cards[0]['back'] | safe }}$
+                    {% else %}
+                        {{ cards[0]['back'] | safe }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flashcard-nav">
+        <button id="prev-btn" onclick="previousCard()" disabled>← Previous</button>
+        <button id="flip-btn" class="flip-btn" onclick="flipCard()">Click to Flip</button>
+        <button id="next-btn" onclick="nextCard()">Next →</button>
+    </div>
+
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="{{ request.url_for('study_mode_select', set_id=flashcard_set['id']) }}">← Back to Study Options</a>
+    </div>
+
+    <script>
+        let currentCardIndex = 0;
+        let isFlipped = false;
+        const cards = {{ cards_json|safe }};
+
+        function updateCard() {
+            const card = cards[currentCardIndex];
+            
+            // Check if content looks like LaTeX and wrap in delimiters
+            let frontContent = card.front;
+            let backContent = card.back;
+            
+            const latexPatterns = ['\\frac', '\\sum', '\\sqrt', '\\int', '\\alpha', '\\beta', '\\gamma', '\\delta', '\\pi', '\\sigma', '\\mu', '\\bar', '\\text'];
+            
+            if (latexPatterns.some(pattern => frontContent.includes(pattern))) {
+                frontContent = `$${frontContent}$`;
+            }
+            if (latexPatterns.some(pattern => backContent.includes(pattern))) {
+                backContent = `$${backContent}$`;
+            }
+            
+            document.getElementById('front-content').innerHTML = frontContent;
+            document.getElementById('back-content').innerHTML = backContent;
+            document.getElementById('current-card').textContent = currentCardIndex + 1;
+            
+            // Reset flip state
+            isFlipped = false;
+            document.getElementById('flashcard').classList.remove('flipped');
+            document.getElementById('flip-btn').textContent = 'Click to Flip';
+            
+            // Update navigation buttons
+            document.getElementById('prev-btn').disabled = currentCardIndex === 0;
+            document.getElementById('next-btn').disabled = currentCardIndex === cards.length - 1;
+            
+            // Re-render KaTeX after updating content
+            if (window.renderMathInElement) {
+                console.log('Re-rendering KaTeX for card update...');
+                try {
+                    renderMathInElement(document.getElementById('front-content'), {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false},
+                            {left: '\\(', right: '\\)', display: false},
+                            {left: '\\[', right: '\\]', display: true}
+                        ],
+                        throwOnError: false
+                    });
+                    renderMathInElement(document.getElementById('back-content'), {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false},
+                            {left: '\\(', right: '\\)', display: false},
+                            {left: '\\[', right: '\\]', display: true}
+                        ],
+                        throwOnError: false
+                    });
+                    console.log('KaTeX card update completed');
+                } catch (e) {
+                    console.log('KaTeX processing error:', e);
+                }
+            } else {
+                console.log('KaTeX not available for card update');
+            }
+        }
+        
+        // Ensure KaTeX processes initial content
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simple approach - just wait for KaTeX to be available
+            function processKaTeX() {
+                if (window.renderMathInElement) {
+                    console.log('KaTeX detected, processing initial content...');
+                    
+                    try {
+                        renderMathInElement(document.getElementById('front-content'), {
+                            delimiters: [
+                                {left: '$$', right: '$$', display: true},
+                                {left: '$', right: '$', display: false},
+                                {left: '\\(', right: '\\)', display: false},
+                                {left: '\\[', right: '\\]', display: true}
+                            ],
+                            throwOnError: false
+                        });
+                        renderMathInElement(document.getElementById('back-content'), {
+                            delimiters: [
+                                {left: '$$', right: '$$', display: true},
+                                {left: '$', right: '$', display: false},
+                                {left: '\\(', right: '\\)', display: false},
+                                {left: '\\[', right: '\\]', display: true}
+                            ],
+                            throwOnError: false
+                        });
+                        console.log('KaTeX initial processing completed');
+                    } catch (e) {
+                        console.log('KaTeX processing error:', e);
+                    }
+                } else {
+                    console.log('KaTeX not available, retrying...');
+                    setTimeout(processKaTeX, 100);
+                }
+            }
+            
+            // Start processing after a short delay
+            setTimeout(processKaTeX, 200);
+        });
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            const flashcard = document.getElementById('flashcard');
+            const flipBtn = document.getElementById('flip-btn');
+            
+            if (isFlipped) {
+                flashcard.classList.add('flipped');
+                flipBtn.textContent = 'Click to Show Term';
+            } else {
+                flashcard.classList.remove('flipped');
+                flipBtn.textContent = 'Click to Flip';
+            }
+        }
+
+        function nextCard() {
+            if (currentCardIndex < cards.length - 1) {
+                currentCardIndex++;
+                updateCard();
+            }
+        }
+
+        function previousCard() {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                updateCard();
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            switch(event.key) {
+                case 'ArrowRight':
+                case ' ':
+                    if (isFlipped) {
+                        nextCard();
+                    } else {
+                        flipCard();
+                    }
+                    break;
+                case 'ArrowLeft':
+                    if (isFlipped) {
+                        previousCard();
+                    } else {
+                        flipCard();
+                    }
+                    break;
+                case 'ArrowUp':
+                case 'ArrowDown':
+                    flipCard();
+                    break;
+            }
+        });
+
+        // Initialize
+        updateCard();
+    </script>
+{% endblock %}
