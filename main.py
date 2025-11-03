@@ -52,21 +52,32 @@ else:
     DATABASE_PATH = os.path.join(BASE_DIR, "flashcards.db")
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Manage application lifespan events."""
-    # Startup
+# For Vercel, we can't use lifespan events, so initialize on first request
+# For local development, use lifespan
+if os.environ.get("VERCEL"):
+    # Vercel/serverless: create app without lifespan
+    app = FastAPI()
+    # Initialize database on first import (lazy initialization)
     try:
         init_db()
     except Exception as e:
-        # Log error but don't fail startup
         print(f"Warning: Database initialization error: {e}")
-    yield
-    # Shutdown (if needed)
-    pass
-
-
-app = FastAPI(lifespan=lifespan)
+else:
+    # Local development: use lifespan
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        """Manage application lifespan events."""
+        # Startup
+        try:
+            init_db()
+        except Exception as e:
+            # Log error but don't fail startup
+            print(f"Warning: Database initialization error: {e}")
+        yield
+        # Shutdown (if needed)
+        pass
+    
+    app = FastAPI(lifespan=lifespan)
 
 # Session store. For Vercel/serverless, we need to use a persistent solution.
 # In-memory sessions won't work across function invocations.

@@ -28,5 +28,6 @@ except Exception as e:
 from mangum import Mangum
 
 # Create Mangum handler - this wraps the ASGI app for serverless
+# lifespan="off" because we handle initialization in main.py
 handler = Mangum(app, lifespan="off")
 
