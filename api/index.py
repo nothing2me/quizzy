@@ -24,7 +24,9 @@ except Exception as e:
     print(traceback.format_exc())
     raise
 
-# Handler for Vercel - FastAPI is ASGI compatible
-# Vercel automatically wraps ASGI apps, so we can export the app directly
-handler = app
+# Wrap FastAPI app with Mangum for Vercel/AWS Lambda compatibility
+from mangum import Mangum
+
+# Create Mangum handler - this wraps the ASGI app for serverless
+handler = Mangum(app, lifespan="off")
 
