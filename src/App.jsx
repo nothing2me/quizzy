@@ -6,11 +6,15 @@ import Play from './pages/Play.jsx'
 import NotFound from './pages/NotFound.jsx'
 import './App.css'
 
+// Define the shared application layout and client-side page routes.
 function App() {
   return (
     <>
+      {/* Keep navigation visible while the active page changes. */}
       <Navbar />
+
       <main className="page">
+        {/* Render the matching page without a full browser reload. */}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/play" element={<Play />} />

@@ -1,7 +1,9 @@
+-- Create or update the question set used by the Quizzy application.
 INSERT INTO question_sets (id, title)
 VALUES ('corpus-cc', 'Corpus Christi and TAMU-CC')
 ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title;
 
+-- Insert the initial questions, updating existing records when IDs match.
 INSERT INTO questions (id, question_set_id, prompt, position)
 VALUES
   ('q1', 'corpus-cc', 'Which body of water borders Corpus Christi?', 1),
@@ -11,6 +13,7 @@ ON CONFLICT (id) DO UPDATE SET
   prompt = EXCLUDED.prompt,
   position = EXCLUDED.position;
 
+-- Insert four answer choices per question, including correctness and display order.
 INSERT INTO answer_choices (id, question_id, text, is_correct, position)
 VALUES
   ('q1-a', 'q1', 'Gulf of Mexico', TRUE, 1),

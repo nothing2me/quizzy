@@ -2,21 +2,29 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import QuizResults from '../components/QuizResults'
 
+// Time allowed for each question, in seconds.
 const QUESTION_TIME = 20
 
 function Play() {
+  // Track quiz data, loading state, and request errors.
   const [questions, setQuestions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
+  // Track the player's progress, score, and remaining question time.
   const [questionIndex, setQuestionIndex] = useState(0)
   const [score, setScore] = useState(0)
   const [timeLeft, setTimeLeft] = useState(QUESTION_TIME)
+
+  // Track answer selection, submission status, and validation feedback.
   const [selectedChoiceId, setSelectedChoiceId] = useState(null)
   const [status, setStatus] = useState('playing')
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(null)
   const [answerError, setAnswerError] = useState('')
 
+  // Retrieve the question set when the gameplay component mounts.
   useEffect(() => {
+    // Allow pending requests to be canceled if the component unmounts.
     const controller = new AbortController()
 
     async function loadQuestions() {
@@ -26,12 +34,14 @@ function Play() {
           { signal: controller.signal },
         )
 
+        // Reject unsuccessful HTTP responses before processing the data.
         if (!response.ok) {
           throw new Error(`Request failed with status ${response.status}`)
         }
 
         const data = await response.json()
 
+        // Verify the API response contains questions with four valid choices.
         const validQuestions =
           data &&
           Array.isArray(data.questions) &&
@@ -54,6 +64,7 @@ function Play() {
 
         setQuestions(data.questions)
       } catch (requestError) {
+        // Ignore errors caused by intentionally canceling the request.
         if (!controller.signal.aborted) {
           setError(
             requestError instanceof Error
@@ -69,12 +80,17 @@ function Play() {
     }
 
     loadQuestions()
+
+    // Cancel the request during cleanup to avoid stale state updates.
     return () => controller.abort()
   }, [])
 
+  // Identify the current question using the player's progress index.
   const question = questions[questionIndex]
 
+  // Count down once per second while a question is active.
   useEffect(() => {
+    // Pause the timer during loading, errors, or answer submission.
     if (loading || error || !question || status !== 'playing') {
       return undefined
     }
@@ -84,13 +100,17 @@ function Play() {
     }
 
     const timerId = window.setTimeout(() => {
+      // Prevent the countdown from dropping below zero.
       setTimeLeft((remaining) => Math.max(remaining - 1, 0))
     }, 1000)
 
+    // Clear the previous timeout when dependencies change or on unmount.
     return () => window.clearTimeout(timerId)
   }, [loading, error, question, status, timeLeft])
 
+  // Submit the player's selected answer for server-side validation.
   async function chooseAnswer(choiceId) {
+    // Prevent submissions after answering or after time expires.
     if (status !== 'playing' || timeLeft === 0) return
 
     setStatus('submitting')
@@ -112,6 +132,7 @@ function Play() {
 
       const result = await response.json()
 
+      // Require a Boolean result before updating the player's score.
       if (typeof result.isCorrect !== 'boolean') {
         throw new Error('The API returned an invalid answer result.')
       }
@@ -119,12 +140,14 @@ function Play() {
       setSelectedChoiceId(choiceId)
       setLastAnswerCorrect(result.isCorrect)
 
+      // Use the previous score to ensure the increment is based on current state.
       if (result.isCorrect) {
         setScore((currentScore) => currentScore + 1)
       }
 
       setStatus('answered')
     } catch (requestError) {
+      // Display the submission error and allow another attempt.
       setAnswerError(
         requestError instanceof Error
           ? requestError.message
@@ -134,6 +157,7 @@ function Play() {
     }
   }
 
+  // Advance the quiz and reset question-specific interaction state.
   function goToNextQuestion() {
     setQuestionIndex((index) => index + 1)
     setSelectedChoiceId(null)
@@ -143,6 +167,7 @@ function Play() {
     setAnswerError('')
   }
 
+  // Reset the quiz so the player can replay the loaded question set.
   function restartGame() {
     setQuestionIndex(0)
     setScore(0)
@@ -153,6 +178,7 @@ function Play() {
     setAnswerError('')
   }
 
+  // Render the appropriate screen before displaying active gameplay.
   if (loading) {
     return <p className="message" role="status">Loading questions...</p>
   }
@@ -171,7 +197,8 @@ function Play() {
   if (questions.length === 0) {
     return <p>No questions are available yet.</p>
   }
-  
+
+  // Reaching the end of the question array completes the quiz.
   if (!question) {
     return (
       <QuizResults
@@ -182,8 +209,11 @@ function Play() {
     )
   }
 
+  // Derive timeout status without storing redundant state.
   const displayStatus =
     status === 'playing' && timeLeft === 0 ? 'timedOut' : status
+
+  // Allow progression only after an answer is checked or time expires.
   const canContinue =
     displayStatus === 'answered' || displayStatus === 'timedOut'
 
@@ -195,6 +225,7 @@ function Play() {
 
       <div className="choices">
         {question.choices.map((choice) => {
+          // Apply feedback styling only to the player's selected choice.
           const isSelected = choice.id === selectedChoiceId
           const classNames = [
             'choice',
@@ -216,6 +247,7 @@ function Play() {
         })}
       </div>
 
+      {/* Provide accessible feedback for answer submission and results. */}
       {displayStatus === 'submitting' && (
         <p role="status">Checking answer...</p>
       )}

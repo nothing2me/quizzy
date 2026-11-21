@@ -1,12 +1,15 @@
 import { Link } from 'react-router-dom'
 
+// Display the player's final results and provide options to replay or exit.
 function QuizResults({ score, totalQuestions, onPlayAgain }) {
   let accuracy = 0
 
+  // Calculate accuracy as a rounded percentage, avoiding division by zero.
   if (totalQuestions > 0) {
     accuracy = Math.round((score / totalQuestions) * 100)
   }
 
+  // Determine how many questions were not answered correctly.
   const missed = totalQuestions - score
 
   return (
