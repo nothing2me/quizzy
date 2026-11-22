@@ -36,7 +36,7 @@ function Leaderboard({ setId }) {
   }, [setId]);
 
   if (loading) {
-    return <p>Loading leaderboard...</p>;
+    return <p style={{color:'white'}}>Loading leaderboard...</p>;
   }
 
   if (error) {

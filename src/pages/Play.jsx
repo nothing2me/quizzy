@@ -159,7 +159,7 @@ function Play() {
 
   if (error) {
     return (
-      <section>
+      <section className="background">
         <p className="message error" role="alert">
           Could not load questions: {error}
         </p>
@@ -233,7 +233,7 @@ function Play() {
       {displayStatus === 'timedOut' && <p role="status">Time is up!</p>}
 
       {canContinue && (
-        <button type="button" onClick={goToNextQuestion}>
+        <button className="button" type="button" onClick={goToNextQuestion}>
           {questionIndex === questions.length - 1 ? 'See Results' : 'Next'}
         </button>
       )}

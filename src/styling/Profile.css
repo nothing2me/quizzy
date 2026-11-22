@@ -1,0 +1,36 @@
+.container {
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+
+}
+
+.title {
+    font-size: 16px;
+    margin-bottom: 12px;
+    color:black;
+}
+
+.stat {
+    font-size: 16px;
+    font-weight: bold;
+        color:black;
+
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+        color:black;
+
+}
+
+.attempt {
+    border-bottom: 1px solid #444;
+    padding: 12px 0;
+        color:black;
+
+}

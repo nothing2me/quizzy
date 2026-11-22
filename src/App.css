@@ -10,6 +10,10 @@ header {
   text-decoration: none;
 }
 
+body{
+    background-color: rgb(24, 147, 255);
+}
+
 nav {
   display: inline-flex;
   gap: 1rem;
@@ -34,6 +38,9 @@ nav a.active {
   margin-top: 0;
 }
 
+p{
+  font-size:20px;
+}
 .question-list {
   display: grid;
   gap: 1rem;
@@ -56,32 +63,37 @@ nav a.active {
   background: #fff0f0;
 }
 
+.background{
+  background-color: white;
+  border-radius: 12px;
+    padding: 1rem 1rem;
+}
 
 .button {
   display: inline-block;
-  padding: 0.75rem 1rem;
+    padding: 0.75rem 1rem;
   border-radius: 6px;
-  background: #222;
-  color: #fff;
+  background: rgb(32, 32, 32);
+  color: white;
   text-decoration: none;
 }
 
-.link-button{
-  display: inline-block;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  background: #222;
-  color: #fff;
-  text-decoration: none;
-  margin-right: 5px;
-}
-.link-button:hover{
+.button:hover{
  background: #343434;
 }
 
 .game {
   display: grid;
   gap: 1rem;
+  background-color:white;
+   padding: 0.75rem 1rem;
+  border-radius: 12px;
+}
+
+.game .button {
+    justify-self: start;
+    border:none;
+    font-size:15px
 }
 
 .choices {
@@ -96,10 +108,12 @@ nav a.active {
   border-color: black;
   max-width: 400px;
   font-size:large;
-  background-color: rgb(255,255,255);
+  background-color: rgb(232, 232, 232);
+  color:rgb(0, 0, 0);
 }
 .choice:hover{
-  background-color: rgb(205, 205, 205);
+  background-color: rgb(184, 184, 184);
+  
 }
 .choice.correct {
   border-color: #003010;

@@ -19,11 +19,11 @@ function QuizResults({ score, totalQuestions, onPlayAgain }) {
         <p>Questions Missed: {missed}</p>
       </div>
 
-      <button type="button" onClick={onPlayAgain}>
+      <button className="button" type="button" onClick={onPlayAgain}>
         Play Again
       </button>
 
-      <Link to="/">Home</Link>
+      <Link className="button" to="/">Home</Link>
     </section>
   )
 }

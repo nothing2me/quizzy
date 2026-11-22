@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-
+import "../styling/Profile.css"
 
 function Profile() {
     const [user, setUser] = useState(null)
@@ -48,35 +48,9 @@ function Profile() {
     fetchUser()
   }, [])
 
-    //defining styles here to avoid bloating the app.css
-     const styles = {
-    container: {
-      backgroundColor: '#222222',
-      color: 'white',
-      padding: '20px',
-      borderRadius: '8px',
-      marginBottom: '16px',
-    },
-    title: {
-      fontSize: '16px',
-      marginBottom: '12px',
-    },
-    stat: {
-      fontSize: '16px',
-      fontWeight: 'bold',
-    },
-    grid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-      gap: '12px',
-    },
-    attempt: {
-      borderBottom: '1px solid #444',
-      padding: '12px 0',
-    },
-  }
 
-    if (loading) return <p>Loading...</p>
+
+    if (loading) return <p style={{color:'white'}}>Loading Profile...</p>
 
     if (!user) return (
     <div> 
@@ -88,7 +62,7 @@ function Profile() {
     return (
         //<> can be used instead of <div>. it groups the child elements together since return can only take a single html input
         <>
-            <div style={styles.container}>
+            <div className="container">
               <h1>Welcome, {user.displayName}</h1>
               <p>Email: {user.email}</p>
             </div>
@@ -99,28 +73,28 @@ function Profile() {
       {stats && (
         <>
           
-          <div style={styles.container}>
-            <h2 style={styles.title}>Quiz Statistics</h2>
+          <div className="container">
+            <h2 className="title">Quiz Statistics</h2>
 
-            <div style={styles.grid}>
+            <div className="grid">
               <div>
                 <p>Quizzes Taken</p>
-                <p style={styles.stat}>{stats.attempts}</p>
+                <p className="stat">{stats.attempts}</p>
               </div>
 
               <div>
                 <p>Correct Answers</p>
-                <p style={styles.stat}>{stats.correctAnswers}</p>
+                <p className="stat">{stats.correctAnswers}</p>
               </div>
 
               <div>
                 <p>Total Questions</p>
-                <p style={styles.stat}>{stats.totalQuestions}</p>
+                <p className="stat">{stats.totalQuestions}</p>
               </div>
 
               <div>
                 <p>Accuracy</p>
-                <p style={styles.stat}>
+                <p className="stat">
                   {stats.accuracyPercent}%
                 </p>
               </div>
@@ -128,17 +102,14 @@ function Profile() {
           </div>
 
           
-          <div style={styles.container}>
-            <h2 style={styles.title}>Recent Quiz Attempts</h2>
+          <div className="container">
+            <h2 className="title">Recent Quiz Attempts</h2>
 
             {stats.recentAttempts.length == 0 ? (
               <p>You haven't attempted any quizzes yet.</p>
             ) : (
               stats.recentAttempts.map((attempt) => (
-                <div
-                  key={attempt.attemptId}
-                  style={styles.attempt}
-                >
+                <div key={attempt.attemptId}  className="attempt">
                   <h3>{attempt.questionSetTitle}</h3>
 
                   <p>
