@@ -3,6 +3,9 @@ import Navbar from './components/Navbar.jsx'
 import About from './pages/About.jsx'
 import Home from './pages/Home.jsx'
 import Play from './pages/Play.jsx'
+import Profile from './pages/Profile.jsx'
+import Login from './pages/Login.jsx'
+import Register from './pages/Register.jsx'
 import NotFound from './pages/NotFound.jsx'
 import './App.css'
 
@@ -15,6 +18,9 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/play" element={<Play />} />
           <Route path="/about" element={<About />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

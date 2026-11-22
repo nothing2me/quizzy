@@ -66,6 +66,19 @@ nav a.active {
   text-decoration: none;
 }
 
+.link-button{
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  background: #222;
+  color: #fff;
+  text-decoration: none;
+  margin-right: 5px;
+}
+.link-button:hover{
+ background: #343434;
+}
+
 .game {
   display: grid;
   gap: 1rem;
@@ -78,15 +91,25 @@ nav a.active {
 
 .choice {
   padding: 1rem;
-  text-align: left;
+  text-align: center;
+  border-radius: 7px;
+  border-color: black;
+  max-width: 400px;
+  font-size:large;
+  background-color: rgb(255,255,255);
 }
-
+.choice:hover{
+  background-color: rgb(205, 205, 205);
+}
 .choice.correct {
-  border-color: #16803c;
-  background: #e8f7ed;
+  border-color: #003010;
+  background: #16803c;
+  color:white;
+
 }
 
 .choice.incorrect {
-  border-color: #b42318;
-  background: #fff0ef;
+  border-color: #530600;
+  background: #b42318; 
+  color:white;
 }
