@@ -6,10 +6,15 @@ import Play from './pages/Play.jsx'
 import Profile from './pages/Profile.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
+import Leaderboard from './pages/Leaderboard.jsx'
 import NotFound from './pages/NotFound.jsx'
 import './App.css'
 
 function App() {
+
+console.log('App component loaded!');
+
+
   return (
     <>
       <Navbar />
@@ -21,6 +26,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/leaderboard" element={<Leaderboard setId="corpus-cc"/>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
