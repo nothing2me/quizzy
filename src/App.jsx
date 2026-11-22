@@ -109,6 +109,17 @@ function App() {
           <Route path="/play" element={<Play />} />
           <Route path="/about" element={<About />} />
 
+          {/* Temporary route for testing authentication protection. */}
+          <Route
+            path="/account"
+            element={requireAuth(
+              <section>
+                <h1>My Account</h1>
+                <p>Welcome, {user?.displayName}!</p>
+              </section>
+            )}
+          />
+
           <Route
             path="/signup"
             element={
