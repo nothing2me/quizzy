@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import QuizResults from '../components/QuizResults'
 
 const QUESTION_TIME = 20
 
@@ -170,15 +171,14 @@ function Play() {
   if (questions.length === 0) {
     return <p>No questions are available yet.</p>
   }
-
+  
   if (!question) {
     return (
-      <section className="game">
-        <h1>Game complete!</h1>
-        <p>Your score: {score} / {questions.length}</p>
-        <button type="button" onClick={restartGame}>Play Again</button>
-        <Link to="/">Home</Link>
-      </section>
+      <QuizResults
+        score={score}
+        totalQuestions={questions.length}
+        onPlayAgain={restartGame}
+      />
     )
   }
 

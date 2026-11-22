@@ -4,7 +4,6 @@ import About from './pages/About.jsx'
 import Home from './pages/Home.jsx'
 import Play from './pages/Play.jsx'
 import NotFound from './pages/NotFound.jsx'
-import Workspace from './pages/Workspace.jsx'
 import './App.css'
 
 function App() {
@@ -15,7 +14,6 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/play" element={<Play />} />
-          <Route path="/workspace" element={<Workspace />} />
           <Route path="/about" element={<About />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
