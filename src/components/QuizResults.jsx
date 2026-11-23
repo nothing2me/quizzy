@@ -1,7 +1,14 @@
 import { Link } from 'react-router-dom'
 
-// Display the player's final results and provide options to replay or exit.
-function QuizResults({ score, totalQuestions, onPlayAgain }) {
+// Display final quiz results and review missed questions from saved attempts.
+function QuizResults({
+  score,
+  totalQuestions,
+  onPlayAgain,
+  attemptResult,
+  saveError,
+  questions,
+}) {
   let accuracy = 0
 
   // Calculate accuracy as a rounded percentage, avoiding division by zero.
@@ -9,8 +16,15 @@ function QuizResults({ score, totalQuestions, onPlayAgain }) {
     accuracy = Math.round((score / totalQuestions) * 100)
   }
 
-  // Determine how many questions were not answered correctly.
+  // Count questions that were answered incorrectly or left unanswered.
   const missed = totalQuestions - score
+
+  // Use the server's answer review when a completed attempt was saved.
+  let missedAnswers = []
+
+  if (attemptResult && Array.isArray(attemptResult.answers)) {
+    missedAnswers = attemptResult.answers.filter((answer) => !answer.isCorrect)
+  }
 
   return (
     <section className="game">
@@ -22,11 +36,61 @@ function QuizResults({ score, totalQuestions, onPlayAgain }) {
         <p>Questions Missed: {missed}</p>
       </div>
 
-      <button type="button" onClick={onPlayAgain}>
+      {/* Display missed questions using the server's answer review. */}
+      {missedAnswers.length > 0 && (
+        <div>
+          <h2>Missed Questions</h2>
+
+          {missedAnswers.map((answer) => {
+            const question = questions.find(
+              (item) => item.id === answer.questionId,
+            )
+
+            if (!question) return null
+
+            const selectedChoice = question.choices.find(
+              (choice) => choice.id === answer.selectedChoiceId,
+            )
+
+            const correctChoice = question.choices.find(
+              (choice) => choice.id === answer.correctChoiceId,
+            )
+
+            return (
+              <div key={answer.questionId}>
+                <p>{question.prompt}</p>
+                <p>
+                  Your answer: {selectedChoice ? selectedChoice.text : 'No answer'}
+                </p>
+                <p>
+                  Correct answer: {correctChoice ? correctChoice.text : 'Unavailable'}
+                </p>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Explain when an attempt could not be saved. */}
+      {saveError && (
+        <p className="message" role="status">
+          {saveError}
+        </p>
+      )}
+
+      {saveError === 'Sign in to save your score.' && (
+        <Link className="button" to="/login">
+          Sign In
+        </Link>
+      )}
+
+      <button className="button" type="button" onClick={onPlayAgain}>
         Play Again
       </button>
 
-      <Link to="/">Home</Link>
+      <Link className="button" to="/">
+        Home
+      </Link>
     </section>
   )
 }

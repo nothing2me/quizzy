@@ -1,0 +1,49 @@
+.leaderboard {
+  max-width: 800px;
+  margin: 30px auto;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+
+header{
+    background-color: rgb(255, 255, 255);
+}
+
+.leaderboard h2 {
+  text-align: center;
+  margin-bottom: 24px;
+  color:black;
+}
+
+.leaderboard-header,
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 0.7fr 2fr 1fr 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+}
+
+.leaderboard-header {
+  font-weight: bold;
+  background: #c9d4d7;
+  border-radius: 8px;
+  color:black;
+}
+
+.leaderboard-row {
+  border-bottom: 1px solid #e5e7eb;
+  color:black;
+}
+
+.leaderboard-row:first-of-type {
+  background: #fff8dc;
+  font-weight: bold;
+}
+
+.leaderboard-row:last-child {
+  border-bottom: none;
+}

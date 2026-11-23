@@ -5,7 +5,10 @@ import About from './pages/About.jsx'
 import Home from './pages/Home.jsx'
 import Login from './pages/Login.jsx'
 import Play from './pages/Play.jsx'
+import Profile from './pages/Profile.jsx'
+import Register from './pages/Register.jsx'
 import Signup from './pages/Signup.jsx'
+import Leaderboard from './pages/Leaderboard.jsx'
 import NotFound from './pages/NotFound.jsx'
 import './App.css'
 
@@ -63,7 +66,7 @@ function App() {
     navigate('/')
   }
 
-  // End the session on the server before updating the interface.
+  // End the server session before clearing the authenticated user.
   async function handleLogout() {
     const response = await fetch('/api/auth/logout', {
       method: 'POST',
@@ -78,7 +81,7 @@ function App() {
     navigate('/')
   }
 
-  // Keep protected content hidden until the session check finishes.
+  // Prevent signed-out users from accessing protected pages.
   function requireAuth(element) {
     if (authLoading || authError) {
       return <p role="status">{authError || 'Checking session...'}</p>
@@ -87,9 +90,18 @@ function App() {
     return user ? element : <Navigate to="/login" replace />
   }
 
+  // Wait for the session check before choosing an authentication page.
+  function guestOnly(element) {
+    if (authLoading || authError) {
+      return <p role="status">{authError || 'Checking session...'}</p>
+    }
+
+    return user ? <Navigate to="/" replace /> : element
+  }
+
   return (
     <>
-      {/* Keep navigation visible while the active page changes. */}
+      {/* Keep navigation available while the active page changes. */}
       <Navbar
         user={user}
         authLoading={authLoading}
@@ -97,7 +109,7 @@ function App() {
       />
 
       <main className="page">
-        {/* Display authentication errors without assuming the user signed out. */}
+        {/* Report session errors without assuming the user signed out. */}
         {authError && (
           <p className="message error" role="alert">
             {authError}
@@ -105,11 +117,40 @@ function App() {
         )}
 
         <Routes>
+          {/* Public pages and gameplay. */}
           <Route path="/" element={<Home />} />
           <Route path="/play" element={<Play />} />
           <Route path="/about" element={<About />} />
 
-          {/* Temporary route for testing authentication protection. */}
+          {/* Authentication pages. */}
+          <Route
+            path="/login"
+            element={guestOnly(
+              <Login onAuthSuccess={handleAuthSuccess} />
+            )}
+          />
+
+          <Route
+            path="/signup"
+            element={guestOnly(
+              <Signup onAuthSuccess={handleAuthSuccess} />
+            )}
+          />
+
+          {/* Preserve the team's registration page until it is reviewed. */}
+          <Route
+            path="/register"
+            element={guestOnly(<Register />)}
+          />
+
+          {/* Team additions: profile and leaderboard. */}
+          <Route path="/profile" element={<Profile />} />
+          <Route
+            path="/leaderboard"
+            element={<Leaderboard setId="corpus-cc" />}
+          />
+
+          {/* Protected account route from the authentication branch. */}
           <Route
             path="/account"
             element={requireAuth(
@@ -120,29 +161,7 @@ function App() {
             )}
           />
 
-          <Route
-            path="/signup"
-            element={
-              user ? (
-                <Navigate to="/" replace />
-              ) : (
-                <Signup onAuthSuccess={handleAuthSuccess} />
-              )
-            }
-          />
-
-          <Route
-            path="/login"
-            element={
-              user ? (
-                <Navigate to="/" replace />
-              ) : (
-                <Login onAuthSuccess={handleAuthSuccess} />
-              )
-            }
-          />
-
-          {/* Apply requireAuth(...) when adding account-specific routes. */}
+          {/* Handle unknown routes. */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

@@ -40,6 +40,10 @@ function Navbar({ user, authLoading, onLogout }) {
         </NavLink>
         <NavLink to="/about">About</NavLink>
 
+        {/* Preserve the team's Profile and Leaderboard navigation. */}
+        <NavLink to="/profile">Profile</NavLink>
+        <NavLink to="/leaderboard">Leaderboard</NavLink>
+
         {/* Display account controls after the initial session check. */}
         {!authLoading && (
           user ? (

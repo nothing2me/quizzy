@@ -11,9 +11,13 @@ function Play() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  // Track the player's progress, score, and remaining question time.
+  // Track the player's progress, score, and completed answers.
   const [questionIndex, setQuestionIndex] = useState(0)
   const [score, setScore] = useState(0)
+  const [answers, setAnswers] = useState([])
+  const [attemptResult, setAttemptResult] = useState(null)
+  const [saveError, setSaveError] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
   const [timeLeft, setTimeLeft] = useState(QUESTION_TIME)
 
   // Track answer selection, submission status, and validation feedback.
@@ -140,7 +144,13 @@ function Play() {
       setSelectedChoiceId(choiceId)
       setLastAnswerCorrect(result.isCorrect)
 
-      // Use the previous score to ensure the increment is based on current state.
+      // Record each answer for submission when the quiz is completed.
+      setAnswers((currentAnswers) => [
+        ...currentAnswers,
+        { questionId: question.id, choiceId: choiceId },
+      ])
+
+      // Update the score after the backend confirms a correct answer.
       if (result.isCorrect) {
         setScore((currentScore) => currentScore + 1)
       }
@@ -157,8 +167,57 @@ function Play() {
     }
   }
 
-  // Advance the quiz and reset question-specific interaction state.
-  function goToNextQuestion() {
+  // Advance the quiz and save the completed attempt after the final question.
+  async function goToNextQuestion() {
+    if (isSaving) return
+
+    let completedAnswers = answers
+
+    // Record unanswered questions with a null choice when time expires.
+    if (timeLeft === 0 && status === 'playing') {
+      completedAnswers = [
+        ...answers,
+        { questionId: question.id, choiceId: null },
+      ]
+
+      setAnswers(completedAnswers)
+    }
+
+    // Submit the complete attempt for server-side scoring and storage.
+    if (questionIndex === questions.length - 1) {
+      setIsSaving(true)
+      setSaveError('')
+
+      try {
+        const response = await fetch('/api/attempts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            questionSetId: 'corpus-cc',
+            answers: completedAnswers,
+          }),
+        })
+
+        if (response.status === 401) {
+          setSaveError('Sign in to save your score.')
+        } else if (!response.ok) {
+          throw new Error(`Could not save results: ${response.status}`)
+        } else {
+          const result = await response.json()
+          setAttemptResult(result)
+        }
+      } catch (requestError) {
+        setSaveError(
+          requestError instanceof Error
+            ? requestError.message
+            : 'Could not save your results.',
+        )
+      } finally {
+        setIsSaving(false)
+      }
+    }
+
+    // Reset question-specific state before continuing.
     setQuestionIndex((index) => index + 1)
     setSelectedChoiceId(null)
     setTimeLeft(QUESTION_TIME)
@@ -171,6 +230,10 @@ function Play() {
   function restartGame() {
     setQuestionIndex(0)
     setScore(0)
+    setAnswers([])
+    setAttemptResult(null)
+    setSaveError('')
+    setIsSaving(false)
     setSelectedChoiceId(null)
     setTimeLeft(QUESTION_TIME)
     setStatus('playing')
@@ -185,7 +248,7 @@ function Play() {
 
   if (error) {
     return (
-      <section>
+      <section className="background">
         <p className="message error" role="alert">
           Could not load questions: {error}
         </p>
@@ -205,6 +268,10 @@ function Play() {
         score={score}
         totalQuestions={questions.length}
         onPlayAgain={restartGame}
+        attemptResult={attemptResult}
+        saveError={saveError}
+        questions={questions}
+        answers={answers}
       />
     )
   }
@@ -265,8 +332,17 @@ function Play() {
       {displayStatus === 'timedOut' && <p role="status">Time is up!</p>}
 
       {canContinue && (
-        <button type="button" onClick={goToNextQuestion}>
-          {questionIndex === questions.length - 1 ? 'See Results' : 'Next'}
+        <button
+          className="button"
+          type="button"
+          onClick={goToNextQuestion}
+          disabled={isSaving}
+        >
+          {isSaving
+            ? 'Saving Results...'
+            : questionIndex === questions.length - 1
+              ? 'See Results'
+              : 'Next'}
         </button>
       )}
 
