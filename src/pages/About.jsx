@@ -1,3 +1,4 @@
+// Display information about the Quizzy development team.
 function About() {
   return (
     <section className="background">

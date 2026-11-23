@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 
+// Display a fallback page when the requested route does not exist.
 function NotFound() {
   return (
     <section>
