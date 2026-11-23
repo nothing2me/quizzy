@@ -6,12 +6,10 @@ function Signup({ onAuthSuccess }) {
     const [email, setEmail] = useState('')
     const [displayName, setDisplayName] = useState('')
     const [password, setPassword] = useState('')
-
-    // Track registration requests and display errors returned by the API.
     const [error, setError] = useState('')
     const [submitting, setSubmitting] = useState(false)
 
-    // Submit the registration details without reloading the page.
+    // Submit registration details without reloading the page.
     async function handleSubmit(event) {
         event.preventDefault()
 
@@ -26,6 +24,7 @@ function Signup({ onAuthSuccess }) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     email: email.trim(),
                     displayName: displayName.trim(),
@@ -61,7 +60,7 @@ function Signup({ onAuthSuccess }) {
     }
 
     return (
-        <section>
+        <section className="auth-card">
             <h1>Create an Account</h1>
             <p>Sign up to save your quiz results and track your progress.</p>
 
@@ -110,7 +109,11 @@ function Signup({ onAuthSuccess }) {
                     />
                 </div>
 
-                <button className="button" type="submit" disabled={submitting}>
+                <button
+                    className="button"
+                    type="submit"
+                    disabled={submitting}
+                >
                     {submitting ? 'Creating Account...' : 'Create Account'}
                 </button>
 
@@ -120,6 +123,7 @@ function Signup({ onAuthSuccess }) {
                     </p>
                 )}
             </form>
+
             {/* Direct existing users to the login page. */}
             <p>
                 Already have an account?{' '}

@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import "../styling/Profile.css"
+import '../styling/Profile.css'
 
+// Display account information, quiz statistics, and recent attempts.
 function Profile() {
-    const [user, setUser] = useState(null)
-    const [loading, setLoading] = useState(true)
-    const [stats, setStats] = useState(null)
-    const [error,setError] = useState('')
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState(null)
+  const [error, setError] = useState('')
 
-     useEffect(() => {
+  // Retrieve the current user and their saved quiz statistics.
+  useEffect(() => {
+    let active = true
+
     async function fetchUser() {
       try {
         const response = await fetch('/api/auth/me', {
@@ -21,7 +25,9 @@ function Profile() {
 
         const data = await response.json()
 
-        setUser(data.user)
+        if (!active) return
+
+        setUser(data.user ?? null)
 
         if (!data.user) return
 
@@ -35,103 +41,133 @@ function Profile() {
 
         const statsData = await statsResponse.json()
 
-        setStats(statsData)
-
-      } catch (error) {
-        console.error(error)
-        setError(error.message)
+        if (active) {
+          setStats(statsData)
+        }
+      } catch (requestError) {
+        if (active) {
+          console.error(requestError)
+          setError(
+            requestError instanceof Error
+              ? requestError.message
+              : 'Could not load your profile.',
+          )
+        }
       } finally {
-        setLoading(false)
+        if (active) {
+          setLoading(false)
+        }
       }
     }
 
     fetchUser()
+
+    return () => {
+      active = false
+    }
   }, [])
 
+  // Display request status before rendering account information.
+  if (loading) {
+    return <p className="message" role="status">Loading profile...</p>
+  }
 
-
-    if (loading) return <p style={{color:'white'}}>Loading Profile...</p>
-
-    if (!user) return (
-    <div> 
-        <p>You are not logged in.</p>
-        <Link to="/signup" className="link-button">Sign Up</Link>
-         <Link to="/login" className="link-button">Log In</Link>
-    </div>
-    )
+  if (!user) {
     return (
-        //<> can be used instead of <div>. it groups the child elements together since return can only take a single html input
-        <>
-            <div className="container">
-              <h1>Welcome, {user.displayName}</h1>
-              <p>Email: {user.email}</p>
-            </div>
-       {error && (
-        <p style={{ color: 'red' }}>{error}</p>
+      <section className="profile-panel profile-guest">
+        <h1>Player Profile</h1>
+        <p>You are not logged in.</p>
+
+        <div className="profile-actions">
+          <Link to="/login" className="button">Log In</Link>
+          <Link to="/signup" className="link-button">Sign Up</Link>
+        </div>
+
+        {error && (
+          <p className="message error" role="alert">{error}</p>
+        )}
+      </section>
+    )
+  }
+
+  return (
+    <div className="profile">
+      {/* Player information. */}
+      <section className="profile-panel profile-intro">
+        <h1>Welcome, {user.displayName}</h1>
+        <p>Email: {user.email}</p>
+      </section>
+
+      {/* Display statistics errors without hiding the player profile. */}
+      {error && (
+        <p className="message error" role="alert">{error}</p>
       )}
 
       {stats && (
         <>
-          
-          <div className="container">
-            <h2 className="title">Quiz Statistics</h2>
+          {/* Summarize the player's quiz performance. */}
+          <section className="profile-panel">
+            <h2>Quiz Statistics</h2>
 
-            <div className="grid">
-              <div>
-                <p>Quizzes Taken</p>
-                <p className="stat">{stats.attempts}</p>
+            <div className="profile-stats">
+              <div className="profile-stat">
+                <span className="profile-stat-label">Quizzes Taken</span>
+                <strong>{stats.attempts}</strong>
               </div>
 
-              <div>
-                <p>Correct Answers</p>
-                <p className="stat">{stats.correctAnswers}</p>
+              <div className="profile-stat">
+                <span className="profile-stat-label">Correct Answers</span>
+                <strong>{stats.correctAnswers}</strong>
               </div>
 
-              <div>
-                <p>Total Questions</p>
-                <p className="stat">{stats.totalQuestions}</p>
+              <div className="profile-stat">
+                <span className="profile-stat-label">Total Questions</span>
+                <strong>{stats.totalQuestions}</strong>
               </div>
 
-              <div>
-                <p>Accuracy</p>
-                <p className="stat">
-                  {stats.accuracyPercent}%
-                </p>
+              <div className="profile-stat">
+                <span className="profile-stat-label">Accuracy</span>
+                <strong>{stats.accuracyPercent}%</strong>
               </div>
             </div>
-          </div>
+          </section>
 
-          
-          <div className="container">
-            <h2 className="title">Recent Quiz Attempts</h2>
+          {/* Show recent quiz attempts saved in the database. */}
+          <section className="profile-panel">
+            <h2>Recent Quiz Attempts</h2>
 
-            {stats.recentAttempts.length == 0 ? (
+            {stats.recentAttempts.length === 0 ? (
               <p>You haven't attempted any quizzes yet.</p>
             ) : (
-              stats.recentAttempts.map((attempt) => (
-                <div key={attempt.attemptId}  className="attempt">
-                  <h3>{attempt.questionSetTitle}</h3>
+              <div className="profile-attempts">
+                {stats.recentAttempts.map((attempt) => (
+                  <article
+                    className="profile-attempt"
+                    key={attempt.attemptId}
+                  >
+                    <h3>{attempt.questionSetTitle}</h3>
 
-                  <p>
-                    Score: {attempt.score} / {attempt.totalQuestions}
-                  </p>
+                    <div className="profile-attempt-details">
+                      <span>
+                        Score: <strong>{attempt.score} / {attempt.totalQuestions}</strong>
+                      </span>
 
-                  <p>
-                    Accuracy: {attempt.accuracyPercent}%
-                  </p>
+                      <span>
+                        Accuracy: <strong>{attempt.accuracyPercent}%</strong>
+                      </span>
 
-                  <p>
-                    Completed: {
-                      new Date(attempt.completedAt).toLocaleString()
-                    }
-                  </p>
-                </div>
-              ))
+                      <span>
+                        Completed: {new Date(attempt.completedAt).toLocaleString()}
+                      </span>
+                    </div>
+                  </article>
+                ))}
+              </div>
             )}
-          </div>
+          </section>
         </>
       )}
-    </>
+    </div>
   )
 }
 

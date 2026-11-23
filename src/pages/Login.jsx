@@ -30,7 +30,6 @@ function Login({ onAuthSuccess }) {
                 }),
             })
 
-            // Read the response for either user information or an API error.
             const data = await response.json()
 
             if (!response.ok) {
@@ -56,7 +55,7 @@ function Login({ onAuthSuccess }) {
     }
 
     return (
-        <section>
+        <section className="auth-card">
             <h1>Login</h1>
             <p>Sign in to access your Quizzy account.</p>
 
@@ -104,7 +103,7 @@ function Login({ onAuthSuccess }) {
                 )}
             </form>
 
-            {/* Direct new players to the account registration page. */}
+            {/* Direct new users to the registration page. */}
             <p>
                 Don't have an account?{' '}
                 <Link className="link-button" to="/signup">

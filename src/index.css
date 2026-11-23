@@ -1,7 +1,7 @@
 :root {
   font-family: Arial, sans-serif;
   color: #222;
-  background: #fff;
+  background-color: #f3f5f7;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -17,7 +17,14 @@ body {
   margin: 0;
 }
 
-a:focus-visible {
-  outline: 2px solid #555;
+button,
+input {
+  font: inherit;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #1893ff;
   outline-offset: 3px;
 }

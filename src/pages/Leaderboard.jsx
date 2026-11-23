@@ -1,78 +1,116 @@
+import { useEffect, useState } from 'react'
+import '../styling/Leaderboard.css'
 
-import { useEffect, useState } from 'react';
-import "../styling/Leaderboard.css"
+// Display player rankings for the selected question set.
 function Leaderboard({ setId }) {
-  const [entries, setEntries] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [entries, setEntries] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
+  // Retrieve the highest-ranked quiz attempts from the API.
   useEffect(() => {
-    async function fetchLeaderboard() {
-      try {
-        setLoading(true);
-        setError('');
+    let active = true
 
+    async function fetchLeaderboard() {
+      setLoading(true)
+      setError('')
+
+      try {
         const response = await fetch(
-          `/api/leaderboard?setId=${encodeURIComponent(setId)}&limit=10`
-        );
+          `/api/leaderboard?setId=${encodeURIComponent(setId)}&limit=10`,
+        )
 
         if (!response.ok) {
-          throw new Error('Failed to load leaderboard.');
+          throw new Error('Failed to load leaderboard.')
         }
 
-        const data = await response.json();
+        const data = await response.json()
 
-        setEntries(data.entries);
-      } catch (err) {
-        setError(err.message);
+        if (active) {
+          setEntries(data.entries)
+        }
+      } catch (requestError) {
+        if (active) {
+          setError(
+            requestError instanceof Error
+              ? requestError.message
+              : 'Could not load leaderboard.',
+          )
+        }
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false)
+        }
       }
     }
 
     if (setId) {
-      fetchLeaderboard();
+      fetchLeaderboard()
+    } else {
+      setLoading(false)
     }
-  }, [setId]);
 
-  if (loading) {
-    return <p style={{color:'white'}}>Loading leaderboard...</p>;
-  }
-
-  if (error) {
-    return <p>{error}</p>;
-  }
-
-  if (entries.length === 0) {
-    return <p>No leaderboard entries yet.</p>;
-  }
+    return () => {
+      active = false
+    }
+  }, [setId])
 
   return (
-    <div className="leaderboard">
-      <h2>Leaderboard</h2>
+    <section className="leaderboard">
+      <h1>Leaderboard</h1>
+      <p className="leaderboard-description">
+        See how players rank based on their quiz scores.
+      </p>
 
-      <div className="leaderboard-header">
-        <span>Rank</span>
-        <span>Player</span>
-        <span>Score</span>
-        <span>Accuracy</span>
-      </div>
+      {loading ? (
+        <p className="message" role="status">
+          Loading leaderboard...
+        </p>
+      ) : error ? (
+        <p className="message error" role="alert">
+          {error}
+        </p>
+      ) : entries.length === 0 ? (
+        <p className="leaderboard-empty">
+          No leaderboard entries yet.
+        </p>
+      ) : (
+        <div className="leaderboard-scroll">
+          <div className="leaderboard-table">
+            <div className="leaderboard-header">
+              <span>Rank</span>
+              <span>Player</span>
+              <span>Score</span>
+              <span>Accuracy</span>
+            </div>
 
-      {entries.map((player) => (
-        <div className="leaderboard-row" key={player.rank}>
-          <span>#{player.rank}</span>
+            {entries.map((player) => (
+              <div
+                className={`leaderboard-row${player.rank === 1 ? ' leaderboard-first' : ''}`}
+                key={player.rank}
+              >
+                <span className="leaderboard-rank">
+                  #{player.rank}
+                </span>
 
-          <span>{player.displayName}</span>
+                <span className="leaderboard-player">
+                  {player.displayName}
+                </span>
 
-          <span>
-            {player.score}/{player.totalQuestions}
-          </span>
+                <span>
+                  {player.score} / {player.totalQuestions}
+                </span>
 
-          <span>{player.accuracyPercent}%</span>
+                <span>
+                  {player.accuracyPercent}%
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
-  );
+      )}
+    </section>
+  )
 }
 
-export default Leaderboard;
+export default Leaderboard
