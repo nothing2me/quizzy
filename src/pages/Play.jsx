@@ -10,6 +10,10 @@ function Play() {
   const [error, setError] = useState('')
   const [questionIndex, setQuestionIndex] = useState(0)
   const [score, setScore] = useState(0)
+  const [answers, setAnswers] = useState([])
+  const [attemptResult, setAttemptResult] = useState(null)
+  const [saveError, setSaveError] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
   const [timeLeft, setTimeLeft] = useState(QUESTION_TIME)
   const [selectedChoiceId, setSelectedChoiceId] = useState(null)
   const [status, setStatus] = useState('playing')
@@ -118,6 +122,10 @@ function Play() {
 
       setSelectedChoiceId(choiceId)
       setLastAnswerCorrect(result.isCorrect)
+      setAnswers((currentAnswers) => [
+        ...currentAnswers,
+        { questionId: question.id, choiceId: choiceId },
+      ])
 
       if (result.isCorrect) {
         setScore((currentScore) => currentScore + 1)
@@ -134,7 +142,51 @@ function Play() {
     }
   }
 
-  function goToNextQuestion() {
+  async function goToNextQuestion() {
+    if (isSaving) return
+
+    let completedAnswers = answers
+
+    if (timeLeft === 0 && status === 'playing') {
+      completedAnswers = [
+        ...answers,
+        { questionId: question.id, choiceId: null },
+      ]
+      setAnswers(completedAnswers)
+    }
+
+    if (questionIndex === questions.length - 1) {
+      setIsSaving(true)
+      setSaveError('')
+
+      try {
+        const response = await fetch('/api/attempts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            questionSetId: 'corpus-cc',
+            answers: completedAnswers,
+          }),
+        })
+
+        if (response.status === 401) {
+          setSaveError('Sign in to save your score.')
+        } else if (!response.ok) {
+          throw new Error(`Could not save results: ${response.status}`)
+        } else {
+          const result = await response.json()
+          setAttemptResult(result)
+        }
+      } catch (requestError) {
+        setSaveError(
+          requestError instanceof Error
+            ? requestError.message
+            : 'Could not save your results.',
+        )
+      } finally {
+        setIsSaving(false)
+      }
+    }
     setQuestionIndex((index) => index + 1)
     setSelectedChoiceId(null)
     setTimeLeft(QUESTION_TIME)
@@ -146,6 +198,10 @@ function Play() {
   function restartGame() {
     setQuestionIndex(0)
     setScore(0)
+    setAnswers([])
+    setAttemptResult(null)
+    setSaveError('')
+    setIsSaving(false)
     setSelectedChoiceId(null)
     setTimeLeft(QUESTION_TIME)
     setStatus('playing')
@@ -178,6 +234,10 @@ function Play() {
         score={score}
         totalQuestions={questions.length}
         onPlayAgain={restartGame}
+        attemptResult={attemptResult}
+        saveError={saveError}
+        questions={questions}
+        answers={answers}
       />
     )
   }
