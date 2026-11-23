@@ -55,7 +55,7 @@ function Profile() {
     if (!user) return (
     <div> 
         <p>You are not logged in.</p>
-        <Link to="/register" className="link-button">Sign Up</Link>
+        <Link to="/signup" className="link-button">Sign Up</Link>
          <Link to="/login" className="link-button">Log In</Link>
     </div>
     )

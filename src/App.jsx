@@ -6,7 +6,6 @@ import Home from './pages/Home.jsx'
 import Login from './pages/Login.jsx'
 import Play from './pages/Play.jsx'
 import Profile from './pages/Profile.jsx'
-import Register from './pages/Register.jsx'
 import Signup from './pages/Signup.jsx'
 import Leaderboard from './pages/Leaderboard.jsx'
 import NotFound from './pages/NotFound.jsx'
@@ -81,15 +80,6 @@ function App() {
     navigate('/')
   }
 
-  // Prevent signed-out users from accessing protected pages.
-  function requireAuth(element) {
-    if (authLoading || authError) {
-      return <p role="status">{authError || 'Checking session...'}</p>
-    }
-
-    return user ? element : <Navigate to="/login" replace />
-  }
-
   // Wait for the session check before choosing an authentication page.
   function guestOnly(element) {
     if (authLoading || authError) {
@@ -137,10 +127,10 @@ function App() {
             )}
           />
 
-          {/* Preserve the team's registration page until it is reviewed. */}
+          {/* Redirect the legacy registration URL to the shared signup page. */}
           <Route
             path="/register"
-            element={guestOnly(<Register />)}
+            element={<Navigate to="/signup" replace />}
           />
 
           {/* Team additions: profile and leaderboard. */}
@@ -148,17 +138,6 @@ function App() {
           <Route
             path="/leaderboard"
             element={<Leaderboard setId="corpus-cc" />}
-          />
-
-          {/* Protected account route from the authentication branch. */}
-          <Route
-            path="/account"
-            element={requireAuth(
-              <section>
-                <h1>My Account</h1>
-                <p>Welcome, {user?.displayName}!</p>
-              </section>
-            )}
           />
 
           {/* Handle unknown routes. */}
