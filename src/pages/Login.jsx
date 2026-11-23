@@ -1,78 +1,118 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-function Login({ onLogin, onSwitchToRegister }) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+// Allow existing users to sign in through the authentication API.
+function Login({ onAuthSuccess }) {
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [error, setError] = useState('')
+    const [submitting, setSubmitting] = useState(false)
 
-  async function handleLogin(e) {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+    // Submit credentials and update the application's authentication state.
+    async function handleSubmit(event) {
+        event.preventDefault()
 
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      })
+        if (submitting) return
 
-      const data = await response.json()
+        setError('')
+        setSubmitting(true)
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed')
-      }
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    email: email.trim(),
+                    password,
+                }),
+            })
 
-      onLogin(data.user)
+            // Read the response for either user information or an API error.
+            const data = await response.json()
 
-    } catch (error) {
-      setError(error.message)
-    } finally {
-      setLoading(false)
+            if (!response.ok) {
+                throw new Error(data.error || `Login failed: ${response.status}`)
+            }
+
+            if (!data.user) {
+                throw new Error('Login succeeded, but no user was returned.')
+            }
+
+            // The backend creates the session; React stores the public user data.
+            setPassword('')
+            onAuthSuccess(data.user)
+        } catch (requestError) {
+            setError(
+                requestError instanceof Error
+                    ? requestError.message
+                    : 'An unexpected error occurred.',
+            )
+        } finally {
+            setSubmitting(false)
+        }
     }
-  }
 
-  return (
-    <div>
-      <h1>Login</h1>
+    return (
+        <section>
+            <h1>Login</h1>
+            <p>Sign in to access your Quizzy account.</p>
 
-      <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+            <form onSubmit={handleSubmit}>
+                <div>
+                    <label htmlFor="login-email">Email</label>
+                    <input
+                        id="login-email"
+                        type="email"
+                        name="email"
+                        autoComplete="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        disabled={submitting}
+                        required
+                    />
+                </div>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+                <div>
+                    <label htmlFor="login-password">Password</label>
+                    <input
+                        id="login-password"
+                        type="password"
+                        name="password"
+                        autoComplete="current-password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        disabled={submitting}
+                        required
+                    />
+                </div>
 
-        <button className="button" type="submit" disabled={loading}>
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
-      </form>
+                <button
+                    className="button"
+                    type="submit"
+                    disabled={submitting}
+                >
+                    {submitting ? 'Logging in...' : 'Login'}
+                </button>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+                {error && (
+                    <p className="message error" role="alert">
+                        {error}
+                    </p>
+                )}
+            </form>
 
-      <p>
-        Don't have an account?{' '}
-        <Link className="link-button" to="/register">
-          Register
-        </Link>
-      </p>
-    </div>
-  )
+            {/* Direct new players to the account registration page. */}
+            <p>
+                Don't have an account?{' '}
+                <Link className="link-button" to="/signup">
+                    Sign Up
+                </Link>
+            </p>
+        </section>
+    )
 }
 
 export default Login

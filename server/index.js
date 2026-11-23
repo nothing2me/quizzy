@@ -67,6 +67,7 @@ function publicUser(user) {
   }
 }
 
+// Parse incoming JSON request bodies with a 32 KB size limit.
 app.use(express.json({ limit: '32kb' }))
 
 if (!process.env.SESSION_SECRET) {
@@ -225,6 +226,7 @@ app.get('/api/health', async (_req, res, next) => {
   }
 })
 
+// Retrieve the available question sets from the database.
 app.get('/api/question-sets', async (_req, res, next) => {
   try {
     const result = await pool.query(
@@ -236,6 +238,7 @@ app.get('/api/question-sets', async (_req, res, next) => {
   }
 })
 
+// Retrieve a question set with its questions and answer choices.
 app.get('/api/question-sets/:setId/questions', async (req, res, next) => {
   try {
     const setResult = await pool.query(
@@ -247,6 +250,7 @@ app.get('/api/question-sets/:setId/questions', async (req, res, next) => {
       return res.status(404).json({ error: 'Question set not found.' })
     }
 
+    // Exclude correct-answer indicators from the client-facing query.
     const questionResult = await pool.query(
       `SELECT
          q.id AS question_id,
@@ -262,6 +266,7 @@ app.get('/api/question-sets/:setId/questions', async (req, res, next) => {
       [req.params.setId],
     )
 
+    // Group joined database rows into questions with nested choices.
     const questionsById = new Map()
 
     for (const row of questionResult.rows) {
@@ -288,6 +293,7 @@ app.get('/api/question-sets/:setId/questions', async (req, res, next) => {
   }
 })
 
+// Validate a submitted answer without storing the player's response.
 app.post('/api/questions/:questionId/answers', async (req, res, next) => {
   try {
     const { choiceId } = req.body ?? {}
@@ -298,6 +304,7 @@ app.post('/api/questions/:questionId/answers', async (req, res, next) => {
       })
     }
 
+    // Use parameterized SQL to safely handle client-provided identifiers.
     const result = await pool.query(
       `SELECT is_correct
        FROM answer_choices
@@ -645,6 +652,7 @@ app.use((error, _req, res, _next) => {
   res.status(status).json({ error: message })
 })
 
+// Start the API server using the configured port or the default.
 app.listen(port, () => {
   console.log(`Quizzy API listening on http://localhost:${port}`)
 })
